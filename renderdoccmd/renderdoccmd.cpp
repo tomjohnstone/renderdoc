@@ -26,6 +26,8 @@
 #include "renderdoccmd.h"
 #include <app/renderdoc_app.h>
 #include <replay/version.h>
+
+#include <fstream>
 #include <string>
 
 rdcstr conv(const std::string &s)
@@ -71,7 +73,7 @@ rdcarray<rdcstr> convertArgs(const std::vector<std::string> &args)
 }
 
 void DisplayRendererPreview(IReplayController *renderer, uint32_t width, uint32_t height,
-                            uint32_t numLoops)
+                            uint32_t numLoops, const rdcstr& displayName, const rdcstr& savePath)
 {
   if(renderer == NULL)
     return;
@@ -94,13 +96,41 @@ void DisplayRendererPreview(IReplayController *renderer, uint32_t width, uint32_
   d.rawOutput = false;
   d.red = d.green = d.blue = true;
   d.alpha = false;
+  d.resourceId = ResourceId::Null();
 
-  for(const TextureDescription &desc : texs)
+  if(!displayName.empty())
   {
-    if(desc.creationFlags & TextureCategory::SwapBuffer)
+    for(const ResourceDescription &rd : renderer->GetResources())
     {
-      d.resourceId = desc.resourceId;
-      break;
+      if(rd.name.find(displayName) >= 0)
+      {
+        for(const TextureDescription &td : renderer->GetTextures())
+        {
+          if(td.resourceId == rd.resourceId)
+          {
+            d.resourceId = rd.resourceId;
+            if(width == 0)
+              width = td.width;
+            if(height == 0)
+              height = td.height;
+            break;
+          }
+        }
+      }
+
+      if(d.resourceId != ResourceId::Null())
+        break;
+    }
+  }
+  else
+  {
+    for(const TextureDescription &desc : texs)
+    {
+      if(desc.creationFlags & TextureCategory::SwapBuffer)
+      {
+        d.resourceId = desc.resourceId;
+        break;
+      }
     }
   }
 
@@ -122,6 +152,13 @@ void DisplayRendererPreview(IReplayController *renderer, uint32_t width, uint32_
   }
 
   DisplayRendererPreview(renderer, d, width, height, numLoops);
+
+  if(!savePath.empty())
+  {
+    TextureSave saveData{};
+    saveData.resourceId = d.resourceId;
+    renderer->SaveTexture(saveData, savePath);
+  }
 }
 
 static std::vector<std::string> version_lines;
@@ -526,10 +563,12 @@ struct ReplayCommand : public Command
 private:
   std::string filename;
   std::string remote_host;
+  std::string display_name;
+  std::string save_path;
   uint32_t width = 0;
   uint32_t height = 0;
   uint32_t loops = 0;
-
+  
 public:
   ReplayCommand() : Command() {}
   virtual void AddOptions(cmdline::parser &parser)
@@ -542,6 +581,8 @@ public:
     parser.add<std::string>("remote-host", 0,
                             "Instead of replaying locally, replay on this host over the network.",
                             false);
+    parser.add<std::string>("display-name", 'd', "Name of texture to display", false);
+    parser.add<std::string>("save-path", 's' , "Path of texture to save display to", false);
   }
   virtual const char *Description()
   {
@@ -572,6 +613,8 @@ public:
     width = parser.get<uint32_t>("width");
     height = parser.get<uint32_t>("height");
     loops = parser.get<uint32_t>("loops");
+    display_name = parser.get<std::string>("display-name");
+    save_path = parser.get<std::string>("save-path");
 
     return true;
   }
@@ -602,7 +645,7 @@ public:
 
       if(result.OK())
       {
-        DisplayRendererPreview(renderer, width, height, loops);
+        DisplayRendererPreview(renderer, width, height, loops, conv(display_name), conv(save_path));
 
         remote->CloseCapture(renderer);
       }
@@ -636,7 +679,7 @@ public:
 
       if(result.OK())
       {
-        DisplayRendererPreview(renderer, width, height, loops);
+        DisplayRendererPreview(renderer, width, height, loops, conv(display_name), conv(save_path));
 
         renderer->Shutdown();
       }
@@ -831,6 +874,44 @@ public:
     std::cout << "Converted '" << infile << "' to '" << outfile << "'" << std::endl;
 
     return 0;
+  }
+};
+
+struct BenchmarkCommand : public ReplayCommand
+{
+  std::string filename;
+
+  virtual void AddOptions(cmdline::parser &parser) override
+  {
+    ReplayCommand::AddOptions(parser);
+
+    parser.set_footer("<benchmark.ubm>");
+  }
+
+  virtual bool Parse(cmdline::parser &parser, GlobalEnvironment &env) override
+  {
+    std::vector<std::string> rest = parser.rest();
+    if(rest.empty())
+    {
+      std::cerr << "Error: benchmark command requires a filename to load." << std::endl
+                << std::endl
+                << parser.usage();
+      return false;
+    }
+
+    filename = rest[0];
+
+    std::ifstream file(filename);
+    std::vector<std::string> args;
+    std::string line;
+    while(std::getline(file, line))
+    {
+      args.push_back(line);
+    }
+
+    parser.parse(args, true);
+
+    return ReplayCommand::Parse(parser, env);
   }
 };
 
@@ -1572,6 +1653,7 @@ int renderdoccmd(GlobalEnvironment &env, std::vector<std::string> &argv)
     add_command("convert", new ConvertCommand());
     add_command("embed", new EmbeddedSectionCommand(false));
     add_command("extract", new EmbeddedSectionCommand(true));
+    add_command("benchmark", new BenchmarkCommand());
 #endif    // !defined(RDOC_SELFCAPTURE_LIMITEDAPI)
 
     if(argv.size() <= 1)
