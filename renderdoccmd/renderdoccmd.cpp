@@ -899,7 +899,7 @@ struct BenchmarkCommand : public ReplayCommand
       return false;
     }
 
-    std::string baseFolder = rest[0];
+    std::string baseFolder = "Benchmarks/" + rest[0];
     filename = baseFolder + "/args.txt";
 
     std::ifstream file(filename);
