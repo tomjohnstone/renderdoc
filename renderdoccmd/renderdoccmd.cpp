@@ -899,7 +899,8 @@ struct BenchmarkCommand : public ReplayCommand
       return false;
     }
 
-    filename = rest[0];
+    std::string baseFolder = rest[0];
+    filename = baseFolder + "/args.txt";
 
     std::ifstream file(filename);
     std::vector<std::string> args;
@@ -908,6 +909,9 @@ struct BenchmarkCommand : public ReplayCommand
     {
       args.push_back(line);
     }
+
+    auto& captureFilename = args[args.size() - 1];
+    captureFilename = baseFolder + "/" + captureFilename;
 
     parser.parse(args, true);
 
