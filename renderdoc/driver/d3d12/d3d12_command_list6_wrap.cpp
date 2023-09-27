@@ -24,9 +24,76 @@
 
 #include "d3d12_command_list.h"
 
+template <typename SerialiserType>
+bool WrappedID3D12GraphicsCommandList::Serialise_DispatchMesh(SerialiserType &ser,
+                                                              UINT ThreadGroupCountX,
+                                                              UINT ThreadGroupCountY,
+                                                              UINT ThreadGroupCountZ)
+{
+  ID3D12GraphicsCommandList6 *pCommandList = this;
+  SERIALISE_ELEMENT(pCommandList);
+  SERIALISE_ELEMENT(ThreadGroupCountX).Important();
+  SERIALISE_ELEMENT(ThreadGroupCountY).Important();
+  SERIALISE_ELEMENT(ThreadGroupCountZ).Important();
+
+  SERIALISE_CHECK_READ_ERRORS();
+
+  if(IsReplayingAndReading())
+  {
+    m_Cmd->m_LastCmdListID = GetResourceManager()->GetOriginalID(GetResID(pCommandList));
+
+    if(IsActiveReplaying(m_State))
+    {
+      if(m_Cmd->InRerecordRange(m_Cmd->m_LastCmdListID))
+      {
+        ID3D12GraphicsCommandListX *list = m_Cmd->RerecordCmdList(m_Cmd->m_LastCmdListID);
+
+        uint32_t eventId = m_Cmd->HandlePreCallback(list, ActionFlags::Dispatch);
+        Unwrap(list)->Dispatch(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
+        if(eventId && m_Cmd->m_ActionCallback->PostDispatch(eventId, list))
+        {
+          Unwrap6(list)->DispatchMesh(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
+          m_Cmd->m_ActionCallback->PostRedispatch(eventId, list);
+        }
+      }
+    }
+    else
+    {
+      Unwrap6(pCommandList)->DispatchMesh(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
+      GetCrackedList6()->DispatchMesh(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
+
+      m_Cmd->AddEvent();
+
+      ActionDescription action;
+      action.dispatchDimension[0] = ThreadGroupCountX;
+      action.dispatchDimension[1] = ThreadGroupCountY;
+      action.dispatchDimension[2] = ThreadGroupCountZ;
+
+      action.flags |= ActionFlags::Dispatch;
+
+      m_Cmd->AddAction(action);
+    }
+  }
+
+  return true;
+}
+
 void STDMETHODCALLTYPE WrappedID3D12GraphicsCommandList::DispatchMesh(UINT ThreadGroupCountX,
                                                                       UINT ThreadGroupCountY,
                                                                       UINT ThreadGroupCountZ)
 {
-  RDCERR("DispatchMesh called but mesh shading is not supported!");
+  SERIALISE_TIME_CALL(m_pList6->DispatchMesh(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ));
+
+  if(IsCaptureMode(m_State))
+  {
+    CACHE_THREAD_SERIALISER();
+    ser.SetActionChunk();
+    SCOPED_SERIALISE_CHUNK(D3D12Chunk::List_DispatchMesh);
+    Serialise_DispatchMesh(ser, ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
+
+    m_ListRecord->AddChunk(scope.Get(m_ListRecord->cmdInfo->alloc));
+  }
 }
+
+INSTANTIATE_FUNCTION_SERIALISED(void, WrappedID3D12GraphicsCommandList, DispatchMesh,
+                                UINT ThreadGroupCountX, UINT ThreadGroupCountY, UINT ThreadGroupCountZ);

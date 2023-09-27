@@ -859,8 +859,8 @@ ShaderStageMask ConvertVisibility(D3D12_SHADER_VISIBILITY ShaderVisibility)
     case D3D12_SHADER_VISIBILITY_DOMAIN: return ShaderStageMask::Domain;
     case D3D12_SHADER_VISIBILITY_GEOMETRY: return ShaderStageMask::Geometry;
     case D3D12_SHADER_VISIBILITY_PIXEL: return ShaderStageMask::Pixel;
-    case D3D12_SHADER_VISIBILITY_AMPLIFICATION:
-    case D3D12_SHADER_VISIBILITY_MESH:
+    case D3D12_SHADER_VISIBILITY_AMPLIFICATION: return ShaderStageMask::Amplification;
+    case D3D12_SHADER_VISIBILITY_MESH: return ShaderStageMask::Mesh;
     default: RDCERR("Unexpected visibility %u", ShaderVisibility); break;
   }
 
@@ -1534,21 +1534,13 @@ D3D12_EXPANDED_PIPELINE_STATE_STREAM_DESC::D3D12_EXPANDED_PIPELINE_STATE_STREAM_
       }
       case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_AS:
       {
-        if(ptr->data.shader.BytecodeLength > 0)
-        {
-          RDCERR("AS passed to D3D12_PIPELINE_STATE_STREAM_DESC but mesh shaders not supported");
-          errored = true;
-        }
+        AS = ptr->data.shader;
         ITER_ADV(D3D12_SHADER_BYTECODE);
         break;
       }
       case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_MS:
       {
-        if(ptr->data.shader.BytecodeLength > 0)
-        {
-          RDCERR("MS passed to D3D12_PIPELINE_STATE_STREAM_DESC but mesh shaders not supported");
-          errored = true;
-        }
+        MS = ptr->data.shader;
         ITER_ADV(D3D12_SHADER_BYTECODE);
         break;
       }
@@ -1587,6 +1579,8 @@ D3D12_PACKED_PIPELINE_STATE_STREAM_DESC &D3D12_PACKED_PIPELINE_STATE_STREAM_DESC
     m_GraphicsStreamData.DS = expanded.DS;
     m_GraphicsStreamData.HS = expanded.HS;
     m_GraphicsStreamData.GS = expanded.GS;
+    m_GraphicsStreamData.AS = expanded.AS;
+    m_GraphicsStreamData.MS = expanded.MS;
     m_GraphicsStreamData.StreamOutput = expanded.StreamOutput;
     m_GraphicsStreamData.BlendState = expanded.BlendState;
     m_GraphicsStreamData.SampleMask = expanded.SampleMask;
