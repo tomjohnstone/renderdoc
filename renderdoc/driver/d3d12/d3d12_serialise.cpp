@@ -503,6 +503,8 @@ void DoSerialise(SerialiserType &ser, D3D12_EXPANDED_PIPELINE_STATE_STREAM_DESC 
   SERIALISE_MEMBER(DS);
   SERIALISE_MEMBER(HS);
   SERIALISE_MEMBER(GS);
+  SERIALISE_MEMBER(AS);
+  SERIALISE_MEMBER(MS);
   SERIALISE_MEMBER(StreamOutput);
   SERIALISE_MEMBER(BlendState);
   SERIALISE_MEMBER(SampleMask);
@@ -558,6 +560,8 @@ void Deserialise(const D3D12_EXPANDED_PIPELINE_STATE_STREAM_DESC &el)
   FreeAlignedBuffer((byte *)(el.HS.pShaderBytecode));
   FreeAlignedBuffer((byte *)(el.GS.pShaderBytecode));
   FreeAlignedBuffer((byte *)(el.CS.pShaderBytecode));
+  FreeAlignedBuffer((byte *)(el.AS.pShaderBytecode));
+  FreeAlignedBuffer((byte *)(el.MS.pShaderBytecode));
 }
 
 template <class SerialiserType>

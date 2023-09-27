@@ -629,12 +629,13 @@ public:
     }
   }
 
-  size_t GetStageCount() { return 6; }
+  size_t GetStageCount() { return 8; }
   D3D12_SHADER_BYTECODE &GetStage(size_t i)
   {
     D3D12_SHADER_BYTECODE *stages[] = {
         &m_GraphicsStreamData.VS, &m_GraphicsStreamData.HS, &m_GraphicsStreamData.DS,
         &m_GraphicsStreamData.GS, &m_GraphicsStreamData.PS, &m_ComputeStreamData.CS,
+        &m_GraphicsStreamData.AS, &m_GraphicsStreamData.MS
     };
     return *stages[i];
   }
