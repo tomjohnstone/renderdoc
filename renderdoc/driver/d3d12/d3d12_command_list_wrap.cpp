@@ -4376,6 +4376,17 @@ void WrappedID3D12GraphicsCommandList::ReplayExecuteIndirect(ID3D12GraphicsComma
 
           break;
         }
+        case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH:
+        {
+          D3D12_DISPATCH_MESH_ARGUMENTS *args = (D3D12_DISPATCH_MESH_ARGUMENTS *)src;
+          src += sizeof(D3D12_DISPATCH_MESH_ARGUMENTS);
+
+          if(executing)
+            ((ID3D12GraphicsCommandList7*)list)->DispatchMesh(args->ThreadGroupCountX, args->ThreadGroupCountY,
+                                    args->ThreadGroupCountZ);
+
+          break;
+        }
         default: RDCERR("Unexpected argument type! %d", arg.Type); break;
       }
     }
