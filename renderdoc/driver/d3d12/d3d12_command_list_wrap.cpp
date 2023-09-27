@@ -3583,6 +3583,7 @@ void WrappedID3D12GraphicsCommandList::ReserveExecuteIndirect(ID3D12GraphicsComm
         case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH:
         case D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED:
         case D3D12_INDIRECT_ARGUMENT_TYPE_DRAW:
+        case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH:
           // add dummy event and action
           m_Cmd->AddEvent();
           m_Cmd->AddAction(ActionDescription());
@@ -3956,6 +3957,36 @@ void WrappedID3D12GraphicsCommandList::PatchExecuteIndirect(BakedCmdListInfo &in
             structuriser.Serialise("ArgumentData"_lit, buf).Important();
 
             // advance only the EID, since we're still in the same action
+            eid++;
+
+            break;
+          }
+          case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH:
+          {
+            D3D12_DISPATCH_MESH_ARGUMENTS *args = (D3D12_DISPATCH_MESH_ARGUMENTS *)data;
+            data += sizeof(D3D12_DISPATCH_MESH_ARGUMENTS);
+
+            curAction.dispatchDimension[0] = args->ThreadGroupCountX;
+            curAction.dispatchDimension[1] = args->ThreadGroupCountY;
+            curAction.dispatchDimension[2] = args->ThreadGroupCountZ;
+            curAction.flags |= ActionFlags::Dispatch | ActionFlags::Indirect;
+            curAction.customName = StringFormat::Fmt(
+                "[%u] arg%u: IndirectDispatchMesh(<%u, %u, %u>)", i, a, curAction.dispatchDimension[0],
+                curAction.dispatchDimension[1], curAction.dispatchDimension[2]);
+
+            fakeChunk->name = curAction.customName;
+
+            structuriser.Serialise("ArgumentData"_lit, *args).Important();
+
+            // if this is the first action of the indirect, we could have picked up previous
+            // non-indirect events in this action, so the EID will be higher than we expect. Just
+            // assign the action's EID
+            eid = curAction.eventId;
+
+            m_Cmd->AddUsage(state, actions[idx]);
+
+            // advance
+            idx++;
             eid++;
 
             break;

@@ -1724,6 +1724,14 @@ void DoSerialise(SerialiserType &ser, D3D12_DISPATCH_ARGUMENTS &el)
 }
 
 template <class SerialiserType>
+void DoSerialise(SerialiserType &ser, D3D12_DISPATCH_MESH_ARGUMENTS &el)
+{
+  SERIALISE_MEMBER(ThreadGroupCountX).Important();
+  SERIALISE_MEMBER(ThreadGroupCountY).Important();
+  SERIALISE_MEMBER(ThreadGroupCountZ).Important();
+}
+
+template <class SerialiserType>
 void DoSerialise(SerialiserType &ser, D3D12ResourceLayout &el)
 {
   RDCCOMPILE_ASSERT(sizeof(el) == sizeof(uint32_t),
@@ -1886,3 +1894,4 @@ INSTANTIATE_SERIALISE_TYPE(D3D12ResourceLayout);
 INSTANTIATE_SERIALISE_TYPE(D3D12_DRAW_ARGUMENTS);
 INSTANTIATE_SERIALISE_TYPE(D3D12_DRAW_INDEXED_ARGUMENTS);
 INSTANTIATE_SERIALISE_TYPE(D3D12_DISPATCH_ARGUMENTS);
+INSTANTIATE_SERIALISE_TYPE(D3D12_DISPATCH_MESH_ARGUMENTS);
