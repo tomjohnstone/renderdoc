@@ -1126,6 +1126,7 @@ D3D12_EXPANDED_PIPELINE_STATE_STREAM_DESC::D3D12_EXPANDED_PIPELINE_STATE_STREAM_
   DS = graphics.DS;
   HS = graphics.HS;
   GS = graphics.GS;
+  // D3D12_GRAPHICS_PIPELINE_STATE_DESC doesn't have AS or MS
   StreamOutput = graphics.StreamOutput;
   BlendState = graphics.BlendState;
   SampleMask = graphics.SampleMask;
