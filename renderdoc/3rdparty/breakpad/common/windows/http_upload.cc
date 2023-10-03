@@ -38,8 +38,6 @@
 
 #include "breakpad/common/windows/http_upload.h"
 
-#pragma comment(lib, "Wininet.lib")
-
 namespace google_breakpad {
 
 using std::ifstream;
