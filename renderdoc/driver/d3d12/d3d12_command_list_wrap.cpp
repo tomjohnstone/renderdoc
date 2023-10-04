@@ -3885,6 +3885,36 @@ void WrappedID3D12GraphicsCommandList::FinaliseExecuteIndirectEvents(BakedCmdLis
 
             break;
           }
+          case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH:
+          {
+            D3D12_DISPATCH_MESH_ARGUMENTS *args = (D3D12_DISPATCH_MESH_ARGUMENTS *)data;
+            data += sizeof(D3D12_DISPATCH_MESH_ARGUMENTS);
+
+            curAction.dispatchDimension[0] = args->ThreadGroupCountX;
+            curAction.dispatchDimension[1] = args->ThreadGroupCountY;
+            curAction.dispatchDimension[2] = args->ThreadGroupCountZ;
+            curAction.flags |= ActionFlags::Dispatch | ActionFlags::Indirect;
+            curAction.customName = StringFormat::Fmt(
+                "[%u] arg%u: IndirectDispatchMesh(<%u, %u, %u>)", i, a, curAction.dispatchDimension[0],
+                curAction.dispatchDimension[1], curAction.dispatchDimension[2]);
+
+            fakeChunk->name = curAction.customName;
+
+            structuriser.Serialise("ArgumentData"_lit, *args).Important();
+
+            // if this is the first action of the indirect, we could have picked up previous
+            // non-indirect events in this action, so the EID will be higher than we expect. Just
+            // assign the action's EID
+            eid = curAction.eventId;
+
+            m_Cmd->AddUsage(state, actions[idx]);
+
+            // advance
+            idx++;
+            eid++;
+
+            break;
+          }
           default: RDCERR("Unexpected argument type! %d", arg.Type); break;
         }
       }
@@ -3915,6 +3945,17 @@ void WrappedID3D12GraphicsCommandList::FinaliseExecuteIndirectEvents(BakedCmdLis
     // shift all subsequent EIDs and action IDs so they're contiguous
     info.ShiftForRemoved(shiftActionID, shiftEID, idx);
   }
+        case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH:
+        {
+          D3D12_DISPATCH_MESH_ARGUMENTS *args = (D3D12_DISPATCH_MESH_ARGUMENTS *)src;
+          src += sizeof(D3D12_DISPATCH_MESH_ARGUMENTS);
+
+          if(executing)
+            ((ID3D12GraphicsCommandList7*)list)->DispatchMesh(args->ThreadGroupCountX, args->ThreadGroupCountY,
+                                    args->ThreadGroupCountZ);
+
+          break;
+        }
 }
 
 template <typename SerialiserType>

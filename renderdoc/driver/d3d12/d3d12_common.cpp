@@ -27,6 +27,8 @@
 #include "driver/dxgi/dxgi_wrapped.h"
 #include "d3d12_manager.h"
 #include "d3d12_resources.h"
+#define USE_PIX
+#include <pix3.h>
 
 D3D12MarkerRegion::D3D12MarkerRegion(ID3D12GraphicsCommandList *l, const rdcstr &marker)
 {
@@ -60,8 +62,12 @@ void D3D12MarkerRegion::Begin(ID3D12GraphicsCommandList *list, const rdcstr &mar
     // display one less character than specified by the size. Append a space to pad the
     // output without visibly changing the event marker for other debuggers.
     rdcwstr text = StringFormat::UTF82Wide(marker + " ");
+#if 1
+    PIXBeginEvent(list, PIX_COLOR_DEFAULT, text.c_str());
+#else
     UINT size = UINT(text.length() * sizeof(wchar_t));
     list->BeginEvent(0, text.c_str(), size);
+#endif
   }
 }
 
@@ -70,8 +76,12 @@ void D3D12MarkerRegion::Begin(ID3D12CommandQueue *queue, const rdcstr &marker)
   if(queue)
   {
     rdcwstr text = StringFormat::UTF82Wide(marker + " ");
+#if 1
+    PIXBeginEvent(queue, PIX_COLOR_DEFAULT, text.c_str());
+#else
     UINT size = UINT(text.length() * sizeof(wchar_t));
     queue->BeginEvent(0, text.c_str(), size);
+#endif
   }
 }
 
@@ -80,8 +90,12 @@ void D3D12MarkerRegion::Set(ID3D12GraphicsCommandList *list, const rdcstr &marke
   if(list)
   {
     rdcwstr text = StringFormat::UTF82Wide(marker + " ");
+#if 1
+    PIXSetMarker(list, PIX_COLOR_DEFAULT, text.c_str());
+#else
     UINT size = UINT(text.length() * sizeof(wchar_t));
     list->SetMarker(0, text.c_str(), size);
+#endif
   }
 }
 
@@ -90,19 +104,31 @@ void D3D12MarkerRegion::Set(ID3D12CommandQueue *queue, const rdcstr &marker)
   if(queue)
   {
     rdcwstr text = StringFormat::UTF82Wide(marker + " ");
+#if 1
+    PIXSetMarker(queue, PIX_COLOR_DEFAULT, text.c_str());
+#else
     UINT size = UINT(text.length() * sizeof(wchar_t));
     queue->SetMarker(0, text.c_str(), size);
+#endif
   }
 }
 
 void D3D12MarkerRegion::End(ID3D12GraphicsCommandList *list)
 {
+#if 1
+  PIXEndEvent(list);
+#else
   list->EndEvent();
+#endif
 }
 
 void D3D12MarkerRegion::End(ID3D12CommandQueue *queue)
 {
+#if 1
+  PIXEndEvent(queue);
+#else
   queue->EndEvent();
+#endif
 }
 
 void BarrierSet::Configure(ID3D12Resource *res, const SubresourceStateVector &states,
@@ -859,29 +885,13 @@ ShaderStageMask ConvertVisibility(D3D12_SHADER_VISIBILITY ShaderVisibility)
     case D3D12_SHADER_VISIBILITY_DOMAIN: return ShaderStageMask::Domain;
     case D3D12_SHADER_VISIBILITY_GEOMETRY: return ShaderStageMask::Geometry;
     case D3D12_SHADER_VISIBILITY_PIXEL: return ShaderStageMask::Pixel;
-    case D3D12_SHADER_VISIBILITY_AMPLIFICATION:
-    case D3D12_SHADER_VISIBILITY_MESH:
+    case D3D12_SHADER_VISIBILITY_AMPLIFICATION: return ShaderStageMask::Amplification;
+    case D3D12_SHADER_VISIBILITY_MESH: return ShaderStageMask::Mesh;
     default: RDCERR("Unexpected visibility %u", ShaderVisibility); break;
   }
 
   return ShaderStageMask::Unknown;
 }
-
-// from PIXEventsCommon.h of winpixeventruntime
-enum PIXEventType
-{
-  ePIXEvent_EndEvent = 0x000,
-  ePIXEvent_BeginEvent_VarArgs = 0x001,
-  ePIXEvent_BeginEvent_NoArgs = 0x002,
-  ePIXEvent_SetMarker_VarArgs = 0x007,
-  ePIXEvent_SetMarker_NoArgs = 0x008,
-
-  ePIXEvent_EndEvent_OnContext = 0x010,
-  ePIXEvent_BeginEvent_OnContext_VarArgs = 0x011,
-  ePIXEvent_BeginEvent_OnContext_NoArgs = 0x012,
-  ePIXEvent_SetMarker_OnContext_VarArgs = 0x017,
-  ePIXEvent_SetMarker_OnContext_NoArgs = 0x018,
-};
 
 inline void PIX3DecodeEventInfo(const UINT64 BlobData, UINT64 &Timestamp, PIXEventType &EventType)
 {
@@ -1009,13 +1019,13 @@ rdcstr PIX3DecodeEventString(const UINT64 *pData, UINT64 &color)
 
   // convert setmarker event types to beginevent event types because they're identical and it makes
   // for easier processing.
-  if(eventType == ePIXEvent_SetMarker_NoArgs)
-    eventType = ePIXEvent_BeginEvent_NoArgs;
+  if(eventType == PIXEvent_SetMarker_NoArgs)
+    eventType = PIXEvent_BeginEvent_NoArgs;
 
-  if(eventType == ePIXEvent_SetMarker_VarArgs)
-    eventType = ePIXEvent_BeginEvent_VarArgs;
+  if(eventType == PIXEvent_SetMarker_VarArgs)
+    eventType = PIXEvent_BeginEvent_VarArgs;
 
-  if(eventType != ePIXEvent_BeginEvent_NoArgs && eventType != ePIXEvent_BeginEvent_VarArgs)
+  if(eventType != PIXEvent_BeginEvent_NoArgs && eventType != PIXEvent_BeginEvent_VarArgs)
   {
     RDCERR("Unexpected/unsupported PIX3Event %u type in PIXDecodeMarkerEventString", eventType);
     return "";
@@ -1029,7 +1039,7 @@ rdcstr PIX3DecodeEventString(const UINT64 *pData, UINT64 &color)
   rdcstr formatString;
   pData = PIX3DecodeStringParam(pData, formatString);
 
-  if(eventType == ePIXEvent_BeginEvent_NoArgs)
+  if(eventType == PIXEvent_BeginEvent_NoArgs)
     return formatString;
 
   // sprintf remaining args
@@ -1116,6 +1126,7 @@ D3D12_EXPANDED_PIPELINE_STATE_STREAM_DESC::D3D12_EXPANDED_PIPELINE_STATE_STREAM_
   DS = graphics.DS;
   HS = graphics.HS;
   GS = graphics.GS;
+  // D3D12_GRAPHICS_PIPELINE_STATE_DESC doesn't have AS or MS
   StreamOutput = graphics.StreamOutput;
   BlendState = graphics.BlendState;
   SampleMask = graphics.SampleMask;
@@ -1257,6 +1268,8 @@ D3D12_EXPANDED_PIPELINE_STATE_STREAM_DESC::D3D12_EXPANDED_PIPELINE_STATE_STREAM_
   RDCEraseEl(GS);
   RDCEraseEl(PS);
   RDCEraseEl(CS);
+  RDCEraseEl(AS);
+  RDCEraseEl(MS);
   NodeMask = 0;
   RDCEraseEl(CachedPSO);
   Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
@@ -1534,21 +1547,13 @@ D3D12_EXPANDED_PIPELINE_STATE_STREAM_DESC::D3D12_EXPANDED_PIPELINE_STATE_STREAM_
       }
       case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_AS:
       {
-        if(ptr->data.shader.BytecodeLength > 0)
-        {
-          RDCERR("AS passed to D3D12_PIPELINE_STATE_STREAM_DESC but mesh shaders not supported");
-          errored = true;
-        }
+        AS = ptr->data.shader;
         ITER_ADV(D3D12_SHADER_BYTECODE);
         break;
       }
       case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_MS:
       {
-        if(ptr->data.shader.BytecodeLength > 0)
-        {
-          RDCERR("MS passed to D3D12_PIPELINE_STATE_STREAM_DESC but mesh shaders not supported");
-          errored = true;
-        }
+        MS = ptr->data.shader;
         ITER_ADV(D3D12_SHADER_BYTECODE);
         break;
       }
@@ -1587,6 +1592,8 @@ D3D12_PACKED_PIPELINE_STATE_STREAM_DESC &D3D12_PACKED_PIPELINE_STATE_STREAM_DESC
     m_GraphicsStreamData.DS = expanded.DS;
     m_GraphicsStreamData.HS = expanded.HS;
     m_GraphicsStreamData.GS = expanded.GS;
+    m_GraphicsStreamData.AS = expanded.AS;
+    m_GraphicsStreamData.MS = expanded.MS;
     m_GraphicsStreamData.StreamOutput = expanded.StreamOutput;
     m_GraphicsStreamData.BlendState = expanded.BlendState;
     m_GraphicsStreamData.SampleMask = expanded.SampleMask;

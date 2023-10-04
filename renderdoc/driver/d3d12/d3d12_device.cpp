@@ -4296,6 +4296,7 @@ bool WrappedID3D12Device::ProcessChunk(ReadSerialiser &ser, D3D12Chunk context)
     case D3D12Chunk::List_RSSetDepthBias:
     case D3D12Chunk::List_IASetIndexBufferStripCutValue:
     case D3D12Chunk::List_Barrier:
+    case D3D12Chunk::List_DispatchMesh:
       RDCERR("Unexpected chunk while processing initialisation: %s", ToStr(context).c_str());
       return false;
 

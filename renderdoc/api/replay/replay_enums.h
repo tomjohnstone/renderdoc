@@ -2355,6 +2355,9 @@ enum class ShaderStage : uint32_t
 
   Compute,
 
+  Amplification,
+  Mesh,
+
   Count,
 };
 
@@ -4416,6 +4419,8 @@ enum class ShaderStageMask : uint32_t
   Pixel = 1 << uint32_t(ShaderStage::Pixel),
   Fragment = Pixel,
   Compute = 1 << uint32_t(ShaderStage::Compute),
+  Amplification = 1 << uint32_t(ShaderStage::Amplification),
+  Mesh = 1 << uint32_t(ShaderStage::Mesh),
   All = Vertex | Hull | Domain | Geometry | Pixel | Compute,
 };
 

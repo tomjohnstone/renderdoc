@@ -296,7 +296,8 @@ rdcstr DisassembleSPIRV(ShaderStage stage, const bytebuf &shaderBytes, const rdc
     case ShaderStage::Geometry: stageName = "geom"; break;
     case ShaderStage::Fragment: stageName = "frag"; break;
     case ShaderStage::Compute: stageName = "comp"; break;
-    case ShaderStage::Count: return "; Cannot identify shader type";
+    case ShaderStage::Count:
+    default: return "; Cannot identify shader type";
   }
 
   rdcstr tempPath = FileIO::GetTempFolderFilename() + "rdoc_isa__";
@@ -400,7 +401,8 @@ rdcstr DisassembleGLSL(ShaderStage stage, const bytebuf &shaderBytes, const rdcs
       stageIndex = 5;
       stageName = "comp";
       break;
-    case ShaderStage::Count: return "; Cannot identify shader type";
+    case ShaderStage::Count:
+    default: return "; Cannot identify shader type";
   }
 
   rdcstr tempPath = FileIO::GetTempFolderFilename() + "rdoc_isa__";
