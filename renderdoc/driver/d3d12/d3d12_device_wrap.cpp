@@ -1783,6 +1783,11 @@ bool WrappedID3D12Device::Serialise_CreateCommandSignature(SerialiserType &ser,
             wrapped->sig.graphics = false;
             break;
           }
+          case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH:
+          {
+            wrapped->sig.PackedByteSize += sizeof(D3D12_DISPATCH_MESH_ARGUMENTS);
+            break;
+          }
           case D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT:
           {
             wrapped->sig.PackedByteSize +=
