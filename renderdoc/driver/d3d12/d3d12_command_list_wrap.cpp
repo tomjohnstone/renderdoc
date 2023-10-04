@@ -4187,6 +4187,7 @@ bool WrappedID3D12GraphicsCommandList::Serialise_ExecuteIndirect(
             case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH:
             case D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED:
             case D3D12_INDIRECT_ARGUMENT_TYPE_DRAW:
+            case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH:
             {
               // add dummy event and action
               m_Cmd->AddEvent();
