@@ -1127,6 +1127,7 @@
     <None Include="data\glsl\vk_ms2buffer.comp">
       <Filter>Resources\glsl</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="data\renderdoc.rc">

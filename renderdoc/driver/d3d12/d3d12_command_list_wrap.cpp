@@ -3945,17 +3945,6 @@ void WrappedID3D12GraphicsCommandList::FinaliseExecuteIndirectEvents(BakedCmdLis
     // shift all subsequent EIDs and action IDs so they're contiguous
     info.ShiftForRemoved(shiftActionID, shiftEID, idx);
   }
-        case D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH:
-        {
-          D3D12_DISPATCH_MESH_ARGUMENTS *args = (D3D12_DISPATCH_MESH_ARGUMENTS *)src;
-          src += sizeof(D3D12_DISPATCH_MESH_ARGUMENTS);
-
-          if(executing)
-            ((ID3D12GraphicsCommandList7*)list)->DispatchMesh(args->ThreadGroupCountX, args->ThreadGroupCountY,
-                                    args->ThreadGroupCountZ);
-
-          break;
-        }
 }
 
 template <typename SerialiserType>

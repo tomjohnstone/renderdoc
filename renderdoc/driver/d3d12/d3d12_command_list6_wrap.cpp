@@ -60,7 +60,6 @@ bool WrappedID3D12GraphicsCommandList::Serialise_DispatchMesh(SerialiserType &se
     else
     {
       Unwrap6(pCommandList)->DispatchMesh(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
-      GetCrackedList6()->DispatchMesh(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
 
       m_Cmd->AddEvent();
 
