@@ -641,6 +641,10 @@ public:
         desc.GS = GS()->GetDesc();
       if(PS())
         desc.PS = PS()->GetDesc();
+      if(AS())
+        desc.AS = AS()->GetDesc();
+      if(MS())
+        desc.AS = MS()->GetDesc();
     }
     else
     {
@@ -855,6 +859,9 @@ public:
   ShaderEntry *GS() { return (ShaderEntry *)graphics->GS.pShaderBytecode; }
   ShaderEntry *PS() { return (ShaderEntry *)graphics->PS.pShaderBytecode; }
   ShaderEntry *CS() { return (ShaderEntry *)compute->CS.pShaderBytecode; }
+  ShaderEntry *AS() { return (ShaderEntry *)graphics->AS.pShaderBytecode; }
+  ShaderEntry *MS() { return (ShaderEntry *)graphics->MS.pShaderBytecode; }
+
   WrappedID3D12PipelineState(ID3D12PipelineState *real, WrappedID3D12Device *device)
       : WrappedDeviceChild12(real, device)
   {
@@ -875,6 +882,8 @@ public:
       ShaderEntry::ReleaseShader(DS());
       ShaderEntry::ReleaseShader(GS());
       ShaderEntry::ReleaseShader(PS());
+      ShaderEntry::ReleaseShader(AS());
+      ShaderEntry::ReleaseShader(MS());
 
       SAFE_DELETE_ARRAY(graphics->InputLayout.pInputElementDescs);
       SAFE_DELETE_ARRAY(graphics->StreamOutput.pSODeclaration);
@@ -967,6 +976,12 @@ public:
   static void GetResIDFromAddr(D3D12_GPU_VIRTUAL_ADDRESS addr, ResourceId &id, UINT64 &offs)
   {
     m_Addresses.GetResIDFromAddr(addr, id, offs);
+  }
+
+  static void GetResIDFromAddrAllowOutOfBounds(D3D12_GPU_VIRTUAL_ADDRESS addr, ResourceId &id,
+                                               UINT64 &offs)
+  {
+    m_Addresses.GetResIDFromAddrAllowOutOfBounds(addr, id, offs);
   }
 
   // overload to just return the id in case the offset isn't needed
@@ -1259,35 +1274,62 @@ struct UnwrapHelper
 };
 
 #undef D3D12_TYPE_MACRO
-#define D3D12_TYPE_MACRO(iface)                                                           \
-  template <>                                                                             \
-  struct UnwrapHelper<iface>                                                              \
-  {                                                                                       \
-    typedef CONCAT(Wrapped, iface) Outer;                                                 \
-    static bool IsAlloc(void *ptr) { return Outer::IsAlloc(ptr); }                        \
-    static D3D12ResourceType GetTypeEnum() { return (D3D12ResourceType)Outer::TypeEnum; } \
-    static Outer *FromHandle(iface *wrapped) { return (Outer *)wrapped; }                 \
-  };                                                                                      \
-  template <>                                                                             \
-  struct UnwrapHelper<CONCAT(Wrapped, iface)>                                             \
-  {                                                                                       \
-    typedef CONCAT(Wrapped, iface) Outer;                                                 \
-    static bool IsAlloc(void *ptr) { return Outer::IsAlloc(ptr); }                        \
-    static D3D12ResourceType GetTypeEnum() { return (D3D12ResourceType)Outer::TypeEnum; } \
-    static Outer *FromHandle(iface *wrapped) { return (Outer *)wrapped; }                 \
+#define D3D12_TYPE_MACRO(iface)                  \
+  template <>                                    \
+  struct UnwrapHelper<iface>                     \
+  {                                              \
+    typedef CONCAT(Wrapped, iface) Outer;        \
+    static bool IsAlloc(void *ptr)               \
+    {                                            \
+      return Outer::IsAlloc(ptr);                \
+    }                                            \
+    static D3D12ResourceType GetTypeEnum()       \
+    {                                            \
+      return (D3D12ResourceType)Outer::TypeEnum; \
+    }                                            \
+    static Outer *FromHandle(iface *wrapped)     \
+    {                                            \
+      return (Outer *)wrapped;                   \
+    }                                            \
+  };                                             \
+  template <>                                    \
+  struct UnwrapHelper<CONCAT(Wrapped, iface)>    \
+  {                                              \
+    typedef CONCAT(Wrapped, iface) Outer;        \
+    static bool IsAlloc(void *ptr)               \
+    {                                            \
+      return Outer::IsAlloc(ptr);                \
+    }                                            \
+    static D3D12ResourceType GetTypeEnum()       \
+    {                                            \
+      return (D3D12ResourceType)Outer::TypeEnum; \
+    }                                            \
+    static Outer *FromHandle(iface *wrapped)     \
+    {                                            \
+      return (Outer *)wrapped;                   \
+    }                                            \
   };
 
 ALL_D3D12_TYPES;
 
 // extra helpers here for '1' or '2' extended interfaces
-#define D3D12_UNWRAP_EXTENDED(iface, ifaceX)                                              \
-  template <>                                                                             \
-  struct UnwrapHelper<ifaceX>                                                             \
-  {                                                                                       \
-    typedef CONCAT(Wrapped, iface) Outer;                                                 \
-    static bool IsAlloc(void *ptr) { return Outer::IsAlloc(ptr); }                        \
-    static D3D12ResourceType GetTypeEnum() { return (D3D12ResourceType)Outer::TypeEnum; } \
-    static Outer *FromHandle(ifaceX *wrapped) { return (Outer *)wrapped; }                \
+#define D3D12_UNWRAP_EXTENDED(iface, ifaceX)     \
+  template <>                                    \
+  struct UnwrapHelper<ifaceX>                    \
+  {                                              \
+    typedef CONCAT(Wrapped, iface) Outer;        \
+    static bool IsAlloc(void *ptr)               \
+    {                                            \
+      return Outer::IsAlloc(ptr);                \
+    }                                            \
+    static D3D12ResourceType GetTypeEnum()       \
+    {                                            \
+      return (D3D12ResourceType)Outer::TypeEnum; \
+    }                                            \
+    static Outer *FromHandle(ifaceX *wrapped)    \
+    {                                            \
+      return (Outer *)wrapped;                   \
+    }                                            \
   };
 
 D3D12_UNWRAP_EXTENDED(ID3D12Fence, ID3D12Fence1);

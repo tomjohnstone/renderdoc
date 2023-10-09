@@ -2176,6 +2176,16 @@ void GLReplay::OpenGLFillCBufferVariables(ResourceId shader, GLuint prog, bool b
 
       GLuint idx = GL.glGetProgramResourceIndex(prog, eGL_UNIFORM, fullname.c_str());
 
+      // if this is an array of size 1 try looking for <array_variable_name>[0].<member_name>
+      if((idx == GL_INVALID_INDEX) && (desc.elements == 1))
+      {
+        rdcstr arrayZeroName = prefix;
+        if(!arrayZeroName.empty() && arrayZeroName.back() == '.')
+          arrayZeroName.pop_back();
+        arrayZeroName += "[0]." + var.name;
+
+        idx = GL.glGetProgramResourceIndex(prog, eGL_UNIFORM, arrayZeroName.c_str());
+      }
       if(idx == GL_INVALID_INDEX)
       {
         // this might not be an error, this might be the corresponding member in an array-of-structs
@@ -3029,7 +3039,7 @@ void GLReplay::GetTextureData(ResourceId tex, const Subresource &sub,
           dst = data.data() + d * sliceSize;
           src = dst + (height - 1) * rowSize;
 
-          for(GLsizei i = 0; i<height>> 1; i++)
+          for(GLsizei i = 0; i < height >> 1; i++)
           {
             memcpy(row, src, rowSize);
             memcpy(src, dst, rowSize);
@@ -3968,7 +3978,9 @@ rdcarray<GLVersion> GetReplayVersions(RDCDriver api)
   if(api == RDCDriver::OpenGLES)
   {
     return {
-        {3, 2}, {3, 1}, {3, 0},
+        {3, 2},
+        {3, 1},
+        {3, 0},
     };
   }
   else

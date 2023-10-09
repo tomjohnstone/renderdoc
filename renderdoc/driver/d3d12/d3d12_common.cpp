@@ -895,16 +895,6 @@ ShaderStageMask ConvertVisibility(D3D12_SHADER_VISIBILITY ShaderVisibility)
 
 inline void PIX3DecodeEventInfo(const UINT64 BlobData, UINT64 &Timestamp, PIXEventType &EventType)
 {
-  static const UINT64 PIXEventsBlockEndMarker = 0x00000000000FFF80;
-
-  static const UINT64 PIXEventsTypeReadMask = 0x00000000000FFC00;
-  static const UINT64 PIXEventsTypeWriteMask = 0x00000000000003FF;
-  static const UINT64 PIXEventsTypeBitShift = 10;
-
-  static const UINT64 PIXEventsTimestampReadMask = 0xFFFFFFFFFFF00000;
-  static const UINT64 PIXEventsTimestampWriteMask = 0x00000FFFFFFFFFFF;
-  static const UINT64 PIXEventsTimestampBitShift = 20;
-
   Timestamp = (BlobData >> PIXEventsTimestampBitShift) & PIXEventsTimestampWriteMask;
   EventType = PIXEventType((BlobData >> PIXEventsTypeBitShift) & PIXEventsTypeWriteMask);
 }
@@ -912,22 +902,6 @@ inline void PIX3DecodeEventInfo(const UINT64 BlobData, UINT64 &Timestamp, PIXEve
 inline void PIX3DecodeStringInfo(const UINT64 BlobData, UINT64 &Alignment, UINT64 &CopyChunkSize,
                                  bool &IsANSI, bool &IsShortcut)
 {
-  static const UINT64 PIXEventsStringAlignmentWriteMask = 0x000000000000000F;
-  static const UINT64 PIXEventsStringAlignmentReadMask = 0xF000000000000000;
-  static const UINT64 PIXEventsStringAlignmentBitShift = 60;
-
-  static const UINT64 PIXEventsStringCopyChunkSizeWriteMask = 0x000000000000001F;
-  static const UINT64 PIXEventsStringCopyChunkSizeReadMask = 0x0F80000000000000;
-  static const UINT64 PIXEventsStringCopyChunkSizeBitShift = 55;
-
-  static const UINT64 PIXEventsStringIsANSIWriteMask = 0x0000000000000001;
-  static const UINT64 PIXEventsStringIsANSIReadMask = 0x0040000000000000;
-  static const UINT64 PIXEventsStringIsANSIBitShift = 54;
-
-  static const UINT64 PIXEventsStringIsShortcutWriteMask = 0x0000000000000001;
-  static const UINT64 PIXEventsStringIsShortcutReadMask = 0x0020000000000000;
-  static const UINT64 PIXEventsStringIsShortcutBitShift = 53;
-
   Alignment = (BlobData >> PIXEventsStringAlignmentBitShift) & PIXEventsStringAlignmentWriteMask;
   CopyChunkSize =
       (BlobData >> PIXEventsStringCopyChunkSizeBitShift) & PIXEventsStringCopyChunkSizeWriteMask;
@@ -1709,8 +1683,8 @@ D3D12_PACKED_PIPELINE_STATE_STREAM_DESC &D3D12_PACKED_PIPELINE_STATE_STREAM_DESC
     // one to ensure we don't fail when the new one isn't supported
     if(expanded.DepthStencilState.StencilEnable &&
        (expanded.DepthStencilState.FrontFace.StencilReadMask !=
-            expanded.DepthStencilState.FrontFace.StencilReadMask ||
-        expanded.DepthStencilState.BackFace.StencilWriteMask !=
+            expanded.DepthStencilState.BackFace.StencilReadMask ||
+        expanded.DepthStencilState.FrontFace.StencilWriteMask !=
             expanded.DepthStencilState.BackFace.StencilWriteMask))
     {
       WRITE_VERSIONED_SUBOJBECT(D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DEPTH_STENCIL2,

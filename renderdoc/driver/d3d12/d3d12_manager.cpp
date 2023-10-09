@@ -689,7 +689,12 @@ void D3D12ResourceManager::ApplyBarriers(BarrierSet &barriers,
   {
     const D3D12_RESOURCE_TRANSITION_BARRIER &trans = barriers.barriers[b].Transition;
     ResourceId id = GetResID(trans.pResource);
-    SubresourceStateVector &st = states[id];
+
+    auto it = states.find(id);
+    if(it == states.end())
+      return;
+
+    SubresourceStateVector &st = it->second;
 
     // skip non-transitions, or begin-halves of transitions
     if(barriers.barriers[b].Type != D3D12_RESOURCE_BARRIER_TYPE_TRANSITION ||
@@ -718,7 +723,12 @@ void D3D12ResourceManager::ApplyBarriers(BarrierSet &barriers,
   {
     const D3D12_TEXTURE_BARRIER &trans = barriers.newBarriers[b];
     ResourceId id = GetResID(trans.pResource);
-    SubresourceStateVector &st = states[id];
+
+    auto it = states.find(id);
+    if(it == states.end())
+      return;
+
+    SubresourceStateVector &st = it->second;
 
     // skip begin-halves of split transitions
     if(trans.SyncBefore == D3D12_BARRIER_SYNC_SPLIT)
@@ -1032,6 +1042,35 @@ void GPUAddressRangeTracker::GetResIDFromAddr(D3D12_GPU_VIRTUAL_ADDRESS addr, Re
   }
 
   if(addr < range.start || addr >= range.end)
+    return;
+
+  id = range.id;
+  offs = addr - range.start;
+}
+
+void GPUAddressRangeTracker::GetResIDFromAddrAllowOutOfBounds(D3D12_GPU_VIRTUAL_ADDRESS addr,
+                                                              ResourceId &id, UINT64 &offs)
+{
+  id = ResourceId();
+  offs = 0;
+
+  if(addr == 0)
+    return;
+
+  GPUAddressRange range;
+
+  // this should really be a read-write lock
+  {
+    SCOPED_READLOCK(addressLock);
+
+    auto it = std::lower_bound(addresses.begin(), addresses.end(), addr);
+    if(it == addresses.end())
+      return;
+
+    range = *it;
+  }
+
+  if(addr < range.start)
     return;
 
   id = range.id;

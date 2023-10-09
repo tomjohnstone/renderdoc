@@ -77,6 +77,11 @@ void D3D12Replay::Shutdown()
 
   FreeLibrary(D3D12Lib);
   D3D12_CleanupReplaySDK();
+
+  // we should have unloaded both modules here by now. If we haven't - we probably leaked some D3D12
+  // objects. This can cause subsequent captures to fail to open.
+  RDCASSERT(GetModuleHandleA("d3d12.dll") == NULL);
+  RDCASSERT(GetModuleHandleA("d3d12core.dll") == NULL);
 }
 
 void D3D12Replay::Initialise(IDXGIFactory1 *factory)
@@ -137,6 +142,11 @@ IReplayDriver *D3D12Replay::MakeDummyDriver()
 void D3D12Replay::CreateResources()
 {
   m_DebugManager = new D3D12DebugManager(m_pDevice);
+
+  for(uint64_t i = FIRST_WIN_RTV; i <= LAST_WIN_RTV; i++)
+    m_OutputWindowIDs.insert(0, i);
+  for(uint64_t i = FIRST_WIN_DSV; i <= LAST_WIN_DSV; i++)
+    m_DSVIDs.insert(0, i);
 
   if(RenderDoc::Inst().IsReplayApp())
   {
@@ -3476,7 +3486,7 @@ void D3D12Replay::RefreshDerivedReplacements()
 
     if(pipe->IsGraphics())
     {
-      ResourceId shaders[5];
+      ResourceId shaders[7];
 
       if(pipe->VS())
         shaders[0] = rm->GetOriginalID(pipe->VS()->GetResourceID());
@@ -3488,6 +3498,10 @@ void D3D12Replay::RefreshDerivedReplacements()
         shaders[3] = rm->GetOriginalID(pipe->GS()->GetResourceID());
       if(pipe->PS())
         shaders[4] = rm->GetOriginalID(pipe->PS()->GetResourceID());
+      if(pipe->AS())
+        shaders[5] = rm->GetOriginalID(pipe->AS()->GetResourceID());
+      if(pipe->MS())
+        shaders[6] = rm->GetOriginalID(pipe->MS()->GetResourceID());
 
       for(size_t i = 0; i < ARRAY_COUNT(shaders); i++)
       {

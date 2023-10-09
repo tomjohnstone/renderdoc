@@ -66,7 +66,7 @@
 }
 
 // MTLDevice : based on the protocol defined in
-// Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.1.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLDevice.h
+// Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLDevice.h
 
 - (NSString *)name
 {
@@ -77,6 +77,13 @@
 {
   return self.real.registryID;
 }
+
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_14_0
+- (MTLArchitecture *)architecture API_AVAILABLE(macos(14.0), ios(17.0))
+{
+  return self.real.architecture;
+}
+#endif
 
 - (MTLSize)maxThreadsPerThreadgroup API_AVAILABLE(macos(10.11), ios(9.0))
 {
@@ -103,8 +110,7 @@
   return self.real.hasUnifiedMemory;
 }
 
-- (uint64_t)recommendedMaxWorkingSetSize API_AVAILABLE(macos(10.12), macCatalyst(13.0))
-    API_UNAVAILABLE(ios)
+- (uint64_t)recommendedMaxWorkingSetSize API_AVAILABLE(macos(10.12), macCatalyst(13.0), ios(16.0))
 {
   return self.real.recommendedMaxWorkingSetSize;
 }
@@ -170,9 +176,8 @@
   return GetWrapped(self)->supportsPullModelInterpolation();
 }
 
-- (BOOL)areBarycentricCoordsSupported
-    API_DEPRECATED_WITH_REPLACEMENT("supportsShaderBarycentricCoordinates", macos(10.15, 13.0),
-                                    ios(14.0, 16.0))API_UNAVAILABLE(tvos)
+- (BOOL)areBarycentricCoordsSupported API_DEPRECATED_WITH_REPLACEMENT(
+    "supportsShaderBarycentricCoordinates", macos(10.15, 13.0), ios(14.0, 16.0))API_UNAVAILABLE(tvos)
 {
   return GetWrapped(self)->areBarycentricCoordsSupported();
 }
@@ -337,8 +342,9 @@
            completionHandler:(MTLNewLibraryCompletionHandler)completionHandler
 {
   METAL_NOT_HOOKED();
-  return
-      [self.real newLibraryWithSource:source options:options completionHandler:completionHandler];
+  return [self.real newLibraryWithSource:source
+                                 options:options
+                       completionHandler:completionHandler];
 }
 
 - (nullable id<MTLLibrary>)newLibraryWithStitchedDescriptor:(MTLStitchedLibraryDescriptor *)descriptor
@@ -358,8 +364,8 @@
 }
 
 - (nullable id<MTLRenderPipelineState>)
-newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor
-                               error:(__autoreleasing NSError **)error
+    newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor
+                                   error:(__autoreleasing NSError **)error
 {
   RDMTL::RenderPipelineDescriptor rdDescriptor((MTL::RenderPipelineDescriptor *)descriptor);
   return id<MTLRenderPipelineState>(
@@ -367,10 +373,10 @@ newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor
 }
 
 - (nullable id<MTLRenderPipelineState>)
-newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor
-                             options:(MTLPipelineOption)options
-                          reflection:(MTLAutoreleasedRenderPipelineReflection *__nullable)reflection
-                               error:(__autoreleasing NSError **)error
+    newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor
+                                 options:(MTLPipelineOption)options
+                              reflection:(MTLAutoreleasedRenderPipelineReflection *__nullable)reflection
+                                   error:(__autoreleasing NSError **)error
 {
   METAL_NOT_HOOKED();
   return [self.real newRenderPipelineStateWithDescriptor:descriptor
@@ -399,18 +405,18 @@ newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor
 }
 
 - (nullable id<MTLComputePipelineState>)
-newComputePipelineStateWithFunction:(id<MTLFunction>)computeFunction
-                              error:(__autoreleasing NSError **)error
+    newComputePipelineStateWithFunction:(id<MTLFunction>)computeFunction
+                                  error:(__autoreleasing NSError **)error
 {
   METAL_NOT_HOOKED();
   return [self.real newComputePipelineStateWithFunction:computeFunction error:error];
 }
 
 - (nullable id<MTLComputePipelineState>)
-newComputePipelineStateWithFunction:(id<MTLFunction>)computeFunction
-                            options:(MTLPipelineOption)options
-                         reflection:(MTLAutoreleasedComputePipelineReflection *__nullable)reflection
-                              error:(__autoreleasing NSError **)error
+    newComputePipelineStateWithFunction:(id<MTLFunction>)computeFunction
+                                options:(MTLPipelineOption)options
+                             reflection:(MTLAutoreleasedComputePipelineReflection *__nullable)reflection
+                                  error:(__autoreleasing NSError **)error
 {
   METAL_NOT_HOOKED();
   return [self.real newComputePipelineStateWithFunction:computeFunction
@@ -439,10 +445,10 @@ newComputePipelineStateWithFunction:(id<MTLFunction>)computeFunction
 }
 
 - (nullable id<MTLComputePipelineState>)
-newComputePipelineStateWithDescriptor:(MTLComputePipelineDescriptor *)descriptor
-                              options:(MTLPipelineOption)options
-                           reflection:(MTLAutoreleasedComputePipelineReflection *__nullable)reflection
-                                error:(__autoreleasing NSError **)error
+    newComputePipelineStateWithDescriptor:(MTLComputePipelineDescriptor *)descriptor
+                                  options:(MTLPipelineOption)options
+                               reflection:(MTLAutoreleasedComputePipelineReflection *__nullable)reflection
+                                    error:(__autoreleasing NSError **)error
     API_AVAILABLE(macos(10.11), ios(9.0))
 {
   METAL_NOT_HOOKED();
@@ -501,10 +507,10 @@ newComputePipelineStateWithDescriptor:(MTLComputePipelineDescriptor *)descriptor
 }
 
 - (nullable id<MTLRenderPipelineState>)
-newRenderPipelineStateWithTileDescriptor:(MTLTileRenderPipelineDescriptor *)descriptor
-                                 options:(MTLPipelineOption)options
-                              reflection:(MTLAutoreleasedRenderPipelineReflection *__nullable)reflection
-                                   error:(__autoreleasing NSError **)error
+    newRenderPipelineStateWithTileDescriptor:(MTLTileRenderPipelineDescriptor *)descriptor
+                                     options:(MTLPipelineOption)options
+                                  reflection:(MTLAutoreleasedRenderPipelineReflection *__nullable)reflection
+                                       error:(__autoreleasing NSError **)error
     API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(11.0), tvos(14.5))
 {
   METAL_NOT_HOOKED();
@@ -528,10 +534,10 @@ newRenderPipelineStateWithTileDescriptor:(MTLTileRenderPipelineDescriptor *)desc
 
 #if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_13_0
 - (nullable id<MTLRenderPipelineState>)
-newRenderPipelineStateWithMeshDescriptor:(MTLMeshRenderPipelineDescriptor *)descriptor
-                                 options:(MTLPipelineOption)options
-                              reflection:(MTLAutoreleasedRenderPipelineReflection *__nullable)reflection
-                                   error:(__autoreleasing NSError **)error
+    newRenderPipelineStateWithMeshDescriptor:(MTLMeshRenderPipelineDescriptor *)descriptor
+                                     options:(MTLPipelineOption)options
+                                  reflection:(MTLAutoreleasedRenderPipelineReflection *__nullable)reflection
+                                       error:(__autoreleasing NSError **)error
     API_AVAILABLE(macos(13.0), ios(16.0))
 {
   METAL_NOT_HOOKED();
@@ -600,9 +606,9 @@ newRenderPipelineStateWithMeshDescriptor:(MTLMeshRenderPipelineDescriptor *)desc
 }
 
 - (nullable id<MTLIndirectCommandBuffer>)
-newIndirectCommandBufferWithDescriptor:(MTLIndirectCommandBufferDescriptor *)descriptor
-                       maxCommandCount:(NSUInteger)maxCount
-                               options:(MTLResourceOptions)options
+    newIndirectCommandBufferWithDescriptor:(MTLIndirectCommandBufferDescriptor *)descriptor
+                           maxCommandCount:(NSUInteger)maxCount
+                                   options:(MTLResourceOptions)options
     API_AVAILABLE(macos(10.14), ios(12.0))
 {
   METAL_NOT_HOOKED();
@@ -648,7 +654,8 @@ newIndirectCommandBufferWithDescriptor:(MTLIndirectCommandBufferDescriptor *)des
 #if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_13_0
 - (nullable id<MTLIOFileHandle>)newIOHandleWithURL:(NSURL *)url
                                              error:(NSError **)error
-    API_AVAILABLE(macos(13.0), ios(16.0))
+    API_DEPRECATED_WITH_REPLACEMENT("Use newIOFileHandleWithURL:error: instead", macos(13.0, 14.0),
+                                    ios(16.0, 17.0))
 {
   METAL_NOT_HOOKED();
   return [self.real newIOHandleWithURL:url error:error];
@@ -669,10 +676,32 @@ newIndirectCommandBufferWithDescriptor:(MTLIndirectCommandBufferDescriptor *)des
 - (nullable id<MTLIOFileHandle>)newIOHandleWithURL:(NSURL *)url
                                  compressionMethod:(MTLIOCompressionMethod)compressionMethod
                                              error:(NSError **)error
-    API_AVAILABLE(macos(13.0), ios(16.0))
+    API_DEPRECATED_WITH_REPLACEMENT("Use newIOFileHandleWithURL:compressionMethod:error: instead",
+                                    macos(13.0, 14.0), ios(16.0, 17.0))
 {
   METAL_NOT_HOOKED();
   return [self.real newIOHandleWithURL:url compressionMethod:compressionMethod error:error];
+}
+#endif
+
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_14_0
+- (nullable id<MTLIOFileHandle>)newIOFileHandleWithURL:(NSURL *)url
+                                                 error:(NSError **)error
+    API_AVAILABLE(macos(14.0), ios(17.0))
+{
+  METAL_NOT_HOOKED();
+  return [self.real newIOFileHandleWithURL:url error:error];
+}
+#endif
+
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_14_0
+- (nullable id<MTLIOFileHandle>)newIOFileHandleWithURL:(NSURL *)url
+                                     compressionMethod:(MTLIOCompressionMethod)compressionMethod
+                                                 error:(NSError **)error
+    API_AVAILABLE(macos(14.0), ios(17.0))
+{
+  METAL_NOT_HOOKED();
+  return [self.real newIOFileHandleWithURL:url compressionMethod:compressionMethod error:error];
 }
 #endif
 

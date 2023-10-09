@@ -78,8 +78,9 @@ bool Vec16NotEqual(void *a, void *b)
 	}
 	
 	return false;
-#elif defined(__LP64__) || defined(_WIN64) || defined(__x86_64__) || defined(_M_X64) || \
-    defined(__ia64) || defined(_M_IA64) || defined(__aarch64__) || defined(__powerpc64__)
+#elif defined(__LP64__) || defined(_WIN64) || defined(__x86_64__) || defined(_M_X64) ||      \
+    defined(__ia64) || defined(_M_IA64) || defined(__aarch64__) || defined(__powerpc64__) || \
+    (defined(__riscv) && __riscv_xlen == 64)
   uint64_t *a64 = (uint64_t *)a;
   uint64_t *b64 = (uint64_t *)b;
 
@@ -297,7 +298,8 @@ RD_TEST(VK_Mem_Bench, VulkanGraphicsTest)
 
     pipeCreateInfo.vertexInputState.vertexBindingDescriptions = {vkh::vertexBind(0, DefaultA2V)};
     pipeCreateInfo.vertexInputState.vertexAttributeDescriptions = {
-        vkh::vertexAttr(0, 0, DefaultA2V, pos), vkh::vertexAttr(1, 0, DefaultA2V, col),
+        vkh::vertexAttr(0, 0, DefaultA2V, pos),
+        vkh::vertexAttr(1, 0, DefaultA2V, col),
         vkh::vertexAttr(2, 0, DefaultA2V, uv),
     };
 
@@ -333,10 +335,11 @@ RD_TEST(VK_Mem_Bench, VulkanGraphicsTest)
 
     VkPipeline pipe = createGraphicsPipeline(pipeCreateInfo);
 
-    AllocatedBuffer vb(this, vkh::BufferCreateInfo(sizeof(DefaultTri) + 128 * 1024,
-                                                   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-                                                       VK_BUFFER_USAGE_TRANSFER_DST_BIT),
-                       VmaAllocationCreateInfo({0, VMA_MEMORY_USAGE_CPU_TO_GPU}));
+    AllocatedBuffer vb(
+        this,
+        vkh::BufferCreateInfo(sizeof(DefaultTri) + 128 * 1024,
+                              VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
+        VmaAllocationCreateInfo({0, VMA_MEMORY_USAGE_CPU_TO_GPU}));
 
     vb.upload(DefaultTri);
 
@@ -378,8 +381,9 @@ RD_TEST(VK_Mem_Bench, VulkanGraphicsTest)
 
         vkAllocateMemory(device, &info, NULL, &alloc.mem);
         vkCreateBuffer(
-            device, vkh::BufferCreateInfo(info.allocationSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
-                                                                   VK_BUFFER_USAGE_TRANSFER_DST_BIT),
+            device,
+            vkh::BufferCreateInfo(info.allocationSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                                                           VK_BUFFER_USAGE_TRANSFER_DST_BIT),
             NULL, &alloc.buf);
         vkBindBufferMemory(device, alloc.buf, alloc.mem, 0);
 
@@ -472,9 +476,9 @@ RD_TEST(VK_Mem_Bench, VulkanGraphicsTest)
 
       vkCmdCopyBuffer(cmd, a.buf, readback.buffer, 1, &region);
 
-      vkh::cmdPipelineBarrier(
-          cmd, {}, {vkh::BufferMemoryBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_HOST_READ_BIT,
-                                             readback.buffer)});
+      vkh::cmdPipelineBarrier(cmd, {},
+                              {vkh::BufferMemoryBarrier(VK_ACCESS_TRANSFER_WRITE_BIT,
+                                                        VK_ACCESS_HOST_READ_BIT, readback.buffer)});
 
       vkEndCommandBuffer(cmd);
 
@@ -635,8 +639,9 @@ RD_TEST(VK_Mem_Bench, VulkanGraphicsTest)
             vkCmdCopyBuffer(cmd, a.buf, a.buf, 1, &region);
 
             vkCmdBeginRenderPass(
-                cmd, vkh::RenderPassBeginInfo(renderPass, framebuffer, mainWindow->scissor,
-                                              {vkh::ClearValue(0.2f, 0.2f, 0.2f, 1.0f)}),
+                cmd,
+                vkh::RenderPassBeginInfo(renderPass, framebuffer, mainWindow->scissor,
+                                         {vkh::ClearValue(0.2f, 0.2f, 0.2f, 1.0f)}),
                 VK_SUBPASS_CONTENTS_INLINE);
 
             vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe);

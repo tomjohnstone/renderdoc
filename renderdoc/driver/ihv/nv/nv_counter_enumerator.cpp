@@ -44,8 +44,7 @@ struct NVCounterEnumerator::Impl
 public:
   nv::perf::MetricsEvaluator Evaluator;
 
-  nv::perf::CounterConfiguration
-      SelectedConfiguration;    // configImage etc. for the current selection
+  nv::perf::CounterConfiguration SelectedConfiguration;    // configImage etc. for the current selection
   rdcarray<GPUCounter> SelectedExternalIds;
   rdcarray<NVPW_MetricEvalRequest> SelectedEvalRequests;
   size_t SelectedNumPasses;
@@ -420,7 +419,9 @@ bool NVCounterEnumerator::InitializeNvPerf()
 {
   rdcstr pluginsFolder = FileIO::GetAppFolderFilename("plugins/nv");
   const char *paths[] = {
-      pluginsFolder.c_str(), "./plugins/nv", ".",
+      pluginsFolder.c_str(),
+      "./plugins/nv",
+      ".",
   };
   NVPW_SetLibraryLoadPaths_Params params{NVPW_SetLibraryLoadPaths_Params_STRUCT_SIZE};
   params.numPaths = sizeof(paths) / sizeof(paths[0]);
@@ -442,7 +443,7 @@ CounterDescription NVCounterEnumerator::LibraryNotFoundMessage()
 #elif ENABLED(RDOC_LINUX)
       "plugins/nv/libnvperf_grfx_host.so"
 #endif
-      );
+  );
   if(pluginPath.empty())
   {
     pluginPath =
@@ -465,13 +466,13 @@ CounterDescription NVCounterEnumerator::LibraryNotFoundMessage()
       "href=\"https://developer.nvidia.com/nsight-perf-sdk\">https://developer.nvidia.com/"
       "nsight-perf-sdk</a></li>"
       "<li>extract the SDK contents</li>"
-      "<li>copy the <strong>"
+      "<li>copy "
 #if ENABLED(RDOC_WIN32)
-      "nvperf_grfx_host.dll"
+      "the <strong>nvperf_grfx_host.dll</strong> file "
 #elif ENABLED(RDOC_LINUX)
-      "libnvperf_grfx_host.so"
+      "all the <strong>libnvperf_grfx_host.*</strong> files "
 #endif
-      "</strong> file to:<br/><strong>%s</strong></li>"
+      "to:<br/><strong>%s</strong></li>"
       "<li>reopen this capture</li>"
       "</ol>",
       pluginPath.c_str());

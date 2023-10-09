@@ -104,7 +104,7 @@
 }
 
 // MTLRenderCommandEncoder : based on the protocol defined in
-// Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLRenderCommandEncoder.h
+// Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLRenderCommandEncoder.h
 
 - (void)setRenderPipelineState:(id<MTLRenderPipelineState>)pipelineState
 {
@@ -140,6 +140,52 @@
   METAL_NOT_HOOKED();
   return [self.real setVertexBuffers:buffers offsets:offsets withRange:range];
 }
+
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_14_0
+- (void)setVertexBuffer:(nullable id<MTLBuffer>)buffer
+                 offset:(NSUInteger)offset
+        attributeStride:(NSUInteger)stride
+                atIndex:(NSUInteger)index API_AVAILABLE(macos(14.0), ios(17.0))
+{
+  METAL_NOT_HOOKED();
+  return [self.real setVertexBuffer:buffer offset:offset attributeStride:stride atIndex:index];
+}
+#endif
+
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_14_0
+- (void)setVertexBuffers:(id<MTLBuffer> const __nullable[__nonnull])buffers
+                 offsets:(NSUInteger const[__nonnull])offsets
+        attributeStrides:(NSUInteger const[__nonnull])strides
+               withRange:(NSRange)range API_AVAILABLE(macos(14.0), ios(17.0))
+{
+  METAL_NOT_HOOKED();
+  return [self.real setVertexBuffers:buffers
+                             offsets:offsets
+                    attributeStrides:strides
+                           withRange:range];
+}
+#endif
+
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_14_0
+- (void)setVertexBufferOffset:(NSUInteger)offset
+              attributeStride:(NSUInteger)stride
+                      atIndex:(NSUInteger)index API_AVAILABLE(macos(14.0), ios(17.0))
+{
+  METAL_NOT_HOOKED();
+  return [self.real setVertexBufferOffset:offset attributeStride:stride atIndex:index];
+}
+#endif
+
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_14_0
+- (void)setVertexBytes:(void const *)bytes
+                length:(NSUInteger)length
+       attributeStride:(NSUInteger)stride
+               atIndex:(NSUInteger)index API_AVAILABLE(macos(14.0), ios(17.0))
+{
+  METAL_NOT_HOOKED();
+  return [self.real setVertexBytes:bytes length:length attributeStride:stride atIndex:index];
+}
+#endif
 
 - (void)setVertexTexture:(nullable id<MTLTexture>)texture atIndex:(NSUInteger)index
 {
@@ -413,8 +459,8 @@
     API_AVAILABLE(macos(12.0), ios(15.0))
 {
   METAL_NOT_HOOKED();
-  return
-      [self.real setFragmentAccelerationStructure:accelerationStructure atBufferIndex:bufferIndex];
+  return [self.real setFragmentAccelerationStructure:accelerationStructure
+                                       atBufferIndex:bufferIndex];
 }
 
 - (void)setBlendColorRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha
@@ -851,9 +897,8 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (void)textureBarrier
-    API_DEPRECATED_WITH_REPLACEMENT("memoryBarrierWithScope:MTLBarrierScopeRenderTargets",
-                                    macos(10.11, 10.14))API_UNAVAILABLE(ios)
+- (void)textureBarrier API_DEPRECATED_WITH_REPLACEMENT(
+    "memoryBarrierWithScope:MTLBarrierScopeRenderTargets", macos(10.11, 10.14))API_UNAVAILABLE(ios)
 {
   METAL_NOT_HOOKED();
   return [self.real textureBarrier];
@@ -1094,8 +1139,8 @@
                           withBufferRange:(NSRange)range API_AVAILABLE(macos(12.0), ios(15.0))
 {
   METAL_NOT_HOOKED();
-  return
-      [self.real setTileIntersectionFunctionTables:intersectionFunctionTable withBufferRange:range];
+  return [self.real setTileIntersectionFunctionTables:intersectionFunctionTable
+                                      withBufferRange:range];
 }
 
 - (void)setTileAccelerationStructure:(nullable id<MTLAccelerationStructure>)accelerationStructure
@@ -1226,8 +1271,9 @@
                    withBarrier:(BOOL)barrier API_AVAILABLE(macos(10.15), ios(14.0))
 {
   METAL_NOT_HOOKED();
-  return
-      [self.real sampleCountersInBuffer:sampleBuffer atSampleIndex:sampleIndex withBarrier:barrier];
+  return [self.real sampleCountersInBuffer:sampleBuffer
+                             atSampleIndex:sampleIndex
+                               withBarrier:barrier];
 }
 
 @end

@@ -47,8 +47,7 @@
 RDOC_CONFIG(bool, Linux_PtraceChildProcesses, true,
             "Use ptrace(2) to trace child processes at startup to ensure connection is made as "
             "early as possible.");
-RDOC_CONFIG(bool, Linux_Debug_PtraceLogging, false,
-            "Enable verbose debug logging of ptrace usage.");
+RDOC_CONFIG(bool, Linux_Debug_PtraceLogging, false, "Enable verbose debug logging of ptrace usage.");
 
 extern char **environ;
 
@@ -227,6 +226,15 @@ static uint64_t get_nanotime()
 // on ARM seemingly the instruction isn't actually considered executed, so we don't have to modify
 // the instruction pointer at all.
 #define BREAK_INST_INST_PTR_ADJUST 0
+
+#elif defined(__riscv)
+
+#define INST_PTR_REG pc
+
+// ebreak
+#define BREAK_INST 0x00100073ULL
+#define BREAK_INST_BYTES_SIZE 4
+#define BREAK_INST_INST_PTR_ADJUST 4
 
 #else
 

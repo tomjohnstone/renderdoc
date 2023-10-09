@@ -359,14 +359,14 @@ public:
   operator D3D12_CPU_DESCRIPTOR_HANDLE() const
   {
     D3D12_CPU_DESCRIPTOR_HANDLE handle;
-    handle.ptr = (SIZE_T) this;
+    handle.ptr = (SIZE_T)this;
     return handle;
   }
 
   operator D3D12_GPU_DESCRIPTOR_HANDLE() const
   {
     D3D12_GPU_DESCRIPTOR_HANDLE handle;
-    handle.ptr = (SIZE_T) this;
+    handle.ptr = (SIZE_T)this;
     return handle;
   }
 
@@ -529,6 +529,7 @@ struct GPUAddressRangeTracker
   void AddTo(const GPUAddressRange &range);
   void RemoveFrom(const GPUAddressRange &range);
   void GetResIDFromAddr(D3D12_GPU_VIRTUAL_ADDRESS addr, ResourceId &id, UINT64 &offs);
+  void GetResIDFromAddrAllowOutOfBounds(D3D12_GPU_VIRTUAL_ADDRESS addr, ResourceId &id, UINT64 &offs);
 };
 
 struct MapState

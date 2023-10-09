@@ -444,14 +444,16 @@ public:
 };
 
 // these aren't documented, they're defined in D3D12TranslationLayer in the d3d11on12 codebase
-typedef enum D3D12_COMPATIBILITY_SHARED_FLAGS {
+typedef enum D3D12_COMPATIBILITY_SHARED_FLAGS
+{
   D3D12_COMPATIBILITY_SHARED_FLAG_NONE = 0,
   D3D12_COMPATIBILITY_SHARED_FLAG_NON_NT_HANDLE = 0x1,
   D3D12_COMPATIBILITY_SHARED_FLAG_KEYED_MUTEX = 0x2,
   D3D12_COMPATIBILITY_SHARED_FLAG_9_ON_12 = 0x4
 } D3D12_COMPATIBILITY_SHARED_FLAGS;
 
-typedef enum D3D12_REFLECT_SHARED_PROPERTY {
+typedef enum D3D12_REFLECT_SHARED_PROPERTY
+{
   D3D12_REFLECT_SHARED_PROPERTY_D3D11_RESOURCE_FLAGS = 0,
   D3D12_REFELCT_SHARED_PROPERTY_COMPATIBILITY_SHARED_FLAGS =
       (D3D12_REFLECT_SHARED_PROPERTY_D3D11_RESOURCE_FLAGS + 1),
@@ -746,7 +748,7 @@ private:
   Threading::CriticalSection m_DynDescLock;
   rdcarray<D3D12Descriptor> m_DynamicDescriptorRefs;
 
-  GPUAddressRangeTracker m_GPUAddresses;
+  GPUAddressRangeTracker m_OrigGPUAddresses;
 
   // used both on capture and replay side to track resource states. Only locked
   // in capture
@@ -908,9 +910,9 @@ public:
     m_DynamicDescriptorRefs.swap(refs);
   }
 
-  void GetResIDFromAddr(D3D12_GPU_VIRTUAL_ADDRESS addr, ResourceId &id, UINT64 &offs)
+  void GetResIDFromOrigAddr(D3D12_GPU_VIRTUAL_ADDRESS addr, ResourceId &id, UINT64 &offs)
   {
-    m_GPUAddresses.GetResIDFromAddr(addr, id, offs);
+    m_OrigGPUAddresses.GetResIDFromAddr(addr, id, offs);
   }
 
   bool IsCubemap(ResourceId id) { return m_Cubemaps.find(id) != m_Cubemaps.end(); }
@@ -969,6 +971,8 @@ public:
   void MarkListExecuted(ID3D12GraphicsCommandListX *list);
   void ExecuteLists(WrappedID3D12CommandQueue *queue = NULL, bool InFrameCaptureBoundary = false);
   void FlushLists(bool forceSync = false, ID3D12CommandQueue *queue = NULL);
+
+  void DataUploadSync();
 
   void GPUSync(ID3D12CommandQueue *queue = NULL, ID3D12Fence *fence = NULL);
   void GPUSyncAllQueues();
