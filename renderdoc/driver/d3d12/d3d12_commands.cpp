@@ -1766,6 +1766,7 @@ uint32_t D3D12CommandData::HandlePreCallback(ID3D12GraphicsCommandListX *list, A
   switch(type)
   {
     case ActionFlags::Drawcall:
+    case ActionFlags::DispatchMesh:
     {
       m_ActionCallback->PreDraw(eventId, list);
       break;
@@ -2080,7 +2081,7 @@ void D3D12CommandData::AddUsage(const D3D12RenderState &state, D3D12ActionTreeNo
 
   uint32_t eid = a.eventId;
 
-  ActionFlags DrawMask = ActionFlags::Drawcall | ActionFlags::Dispatch;
+  ActionFlags DrawMask = ActionFlags::Drawcall | ActionFlags::Dispatch | ActionFlags::DispatchMesh;
   if(!(a.flags & DrawMask))
     return;
 
@@ -2093,7 +2094,7 @@ void D3D12CommandData::AddUsage(const D3D12RenderState &state, D3D12ActionTreeNo
   if(state.pipe != ResourceId())
     pipe = rm->GetCurrentAs<WrappedID3D12PipelineState>(state.pipe);
 
-  const ShaderBindpointMapping *bindMap[6] = {};
+  const ShaderBindpointMapping *bindMap[7] = {};
 
   if((a.flags & ActionFlags::Dispatch) && state.compute.rootsig != ResourceId())
   {
@@ -2114,8 +2115,9 @@ void D3D12CommandData::AddUsage(const D3D12RenderState &state, D3D12ActionTreeNo
     {
       D3D12_SHADER_BYTECODE *srcArr[] = {&pipe->graphics->VS, &pipe->graphics->HS,
                                          &pipe->graphics->DS, &pipe->graphics->GS,
-                                         &pipe->graphics->PS};
-      for(size_t stage = 0; stage < 5; stage++)
+                                         &pipe->graphics->PS, &pipe->graphics->AS,
+                                         &pipe->graphics->MS};
+      for(size_t stage = 0; stage < 7; stage++)
       {
         WrappedID3D12Shader *sh = (WrappedID3D12Shader *)srcArr[stage]->pShaderBytecode;
 
