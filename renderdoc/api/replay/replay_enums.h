@@ -4644,6 +4644,7 @@ enum class ActionFlags : uint32_t
   Resolve = 0x0400,
   GenMips = 0x0800,
   PassBoundary = 0x1000,
+  DispatchMesh = 0x2000,
 
   // flags
   Indexed = 0x010000,

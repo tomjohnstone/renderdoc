@@ -147,7 +147,7 @@ struct NVD3D12Counters::Impl
     if(actionnode.events.empty())
       return false;    // Skip nodes with no events
 
-    if(!(actionnode.flags & (ActionFlags::Clear | ActionFlags::Drawcall | ActionFlags::Dispatch |
+    if(!(actionnode.flags & (ActionFlags::Clear | ActionFlags::Drawcall | ActionFlags::Dispatch | ActionFlags::DispatchMesh |
                              ActionFlags::Present | ActionFlags::Copy | ActionFlags::Resolve)))
       return false;    // Filter out events we cannot profile
 

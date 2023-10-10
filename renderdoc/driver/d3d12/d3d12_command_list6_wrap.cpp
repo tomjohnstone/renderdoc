@@ -48,8 +48,8 @@ bool WrappedID3D12GraphicsCommandList::Serialise_DispatchMesh(SerialiserType &se
       {
         ID3D12GraphicsCommandListX *list = m_Cmd->RerecordCmdList(m_Cmd->m_LastCmdListID);
 
-        uint32_t eventId = m_Cmd->HandlePreCallback(list, ActionFlags::Dispatch);
-        Unwrap(list)->Dispatch(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
+        uint32_t eventId = m_Cmd->HandlePreCallback(list, ActionFlags::DispatchMesh);
+        Unwrap6(list)->DispatchMesh(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
         if(eventId && m_Cmd->m_ActionCallback->PostDispatch(eventId, list))
         {
           Unwrap6(list)->DispatchMesh(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
