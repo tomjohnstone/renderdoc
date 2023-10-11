@@ -3893,7 +3893,7 @@ void WrappedID3D12GraphicsCommandList::FinaliseExecuteIndirectEvents(BakedCmdLis
             curAction.dispatchDimension[0] = args->ThreadGroupCountX;
             curAction.dispatchDimension[1] = args->ThreadGroupCountY;
             curAction.dispatchDimension[2] = args->ThreadGroupCountZ;
-            curAction.flags |= ActionFlags::Dispatch | ActionFlags::Indirect;
+            curAction.flags |= ActionFlags::DispatchMesh | ActionFlags::Indirect;
             curAction.customName = StringFormat::Fmt(
                 "[%u] arg%u: IndirectDispatchMesh(<%u, %u, %u>)", i, a, curAction.dispatchDimension[0],
                 curAction.dispatchDimension[1], curAction.dispatchDimension[2]);

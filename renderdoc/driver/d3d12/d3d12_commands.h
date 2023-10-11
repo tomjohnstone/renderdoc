@@ -127,6 +127,11 @@ struct D3D12ActionCallback
   virtual bool PostDispatch(uint32_t eid, ID3D12GraphicsCommandListX *cmd) = 0;
   virtual void PostRedispatch(uint32_t eid, ID3D12GraphicsCommandListX *cmd) = 0;
 
+    // same principle as above, but for dispatch mesh calls
+  virtual void PreDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) = 0;
+  virtual bool PostDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) = 0;
+  virtual void PostRedispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) = 0;
+
   // finally, these are for copy/blit/resolve/clear/etc
   virtual void PreMisc(uint32_t eid, ActionFlags flags, ID3D12GraphicsCommandListX *cmd) = 0;
   virtual bool PostMisc(uint32_t eid, ActionFlags flags, ID3D12GraphicsCommandListX *cmd) = 0;

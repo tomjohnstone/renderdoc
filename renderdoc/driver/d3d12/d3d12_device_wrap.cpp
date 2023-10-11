@@ -487,7 +487,8 @@ bool WrappedID3D12Device::Serialise_CreateGraphicsPipelineState(
 
       D3D12_SHADER_BYTECODE *shaders[] = {
           &wrapped->graphics->VS, &wrapped->graphics->HS, &wrapped->graphics->DS,
-          &wrapped->graphics->GS, &wrapped->graphics->PS,
+          &wrapped->graphics->GS, &wrapped->graphics->PS, &wrapped->graphics->AS,
+          &wrapped->graphics->MS
       };
 
       AddResource(pPipelineState, ResourceType::PipelineState, "Graphics Pipeline State");
@@ -634,7 +635,8 @@ void WrappedID3D12Device::ProcessCreatedGraphicsPSO(ID3D12PipelineState *real,
 
     D3D12_SHADER_BYTECODE *shaders[] = {
         &wrapped->graphics->VS, &wrapped->graphics->HS, &wrapped->graphics->DS,
-        &wrapped->graphics->GS, &wrapped->graphics->PS,
+        &wrapped->graphics->GS, &wrapped->graphics->PS, &wrapped->graphics->AS,
+        &wrapped->graphics->MS
     };
 
     for(size_t i = 0; i < ARRAY_COUNT(shaders); i++)
