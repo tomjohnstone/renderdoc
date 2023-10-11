@@ -95,6 +95,7 @@ bool WrappedID3D12Device::Serialise_CreatePipelineState(SerialiserType &ser,
       D3D12_SHADER_BYTECODE *shaders[] = {
           &storedDesc->VS, &storedDesc->HS, &storedDesc->DS,
           &storedDesc->GS, &storedDesc->PS, &storedDesc->CS,
+          &storedDesc->AS, &storedDesc->MS
       };
 
       AddResource(pPipelineState, ResourceType::PipelineState, "Pipeline State");
@@ -246,7 +247,9 @@ HRESULT WrappedID3D12Device::CreatePipelineState(const D3D12_PIPELINE_STATE_STRE
            UsesExtensionUAV(expandedDesc.DS, reg, space) ||
            UsesExtensionUAV(expandedDesc.GS, reg, space) ||
            UsesExtensionUAV(expandedDesc.PS, reg, space) ||
-           UsesExtensionUAV(expandedDesc.CS, reg, space))
+           UsesExtensionUAV(expandedDesc.CS, reg, space) ||
+           UsesExtensionUAV(expandedDesc.AS, reg, space) ||
+           UsesExtensionUAV(expandedDesc.MS, reg, space))
         {
           // don't set initparams until we've seen at least one shader actually created using the
           // extensions.
@@ -285,6 +288,7 @@ HRESULT WrappedID3D12Device::CreatePipelineState(const D3D12_PIPELINE_STATE_STRE
       D3D12_SHADER_BYTECODE *shaders[] = {
           &storedDesc->VS, &storedDesc->HS, &storedDesc->DS,
           &storedDesc->GS, &storedDesc->PS, &storedDesc->CS,
+          &storedDesc->AS, &storedDesc->MS
       };
 
       for(size_t i = 0; i < ARRAY_COUNT(shaders); i++)

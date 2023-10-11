@@ -268,6 +268,15 @@ struct D3D12AMDActionCallback : public D3D12ActionCallback
   {
     PostRedraw(eid, cmd);
   }
+  void PostRedispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override
+  {
+    PostRedraw(eid, cmd);
+  }
+  void PreDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override { PreDraw(eid, cmd); }
+  bool PostDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override
+  {
+    return PostDraw(eid, cmd);
+  }
   void PreMisc(uint32_t eid, ActionFlags flags, ID3D12GraphicsCommandListX *cmd) override
   {
     if(flags & ActionFlags::PassBoundary)
@@ -453,6 +462,15 @@ struct D3D12GPUTimerCallback : public D3D12ActionCallback
     return PostDraw(eid, cmd);
   }
   void PostRedispatch(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override
+  {
+    PostRedraw(eid, cmd);
+  }
+  void PreDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override { PreDraw(eid, cmd); }
+  bool PostDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override
+  {
+    return PostDraw(eid, cmd);
+  }
+  void PostRedispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override
   {
     PostRedraw(eid, cmd);
   }

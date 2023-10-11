@@ -252,6 +252,27 @@ void D3D12Replay::InitPostVSBuffers(uint32_t eventId)
     RDCASSERT(dxbcGS);
   }
 
+  DXBC::DXBCContainer *dxbcAS = NULL;
+
+  WrappedID3D12Shader *as = origPSO->AS();
+
+  if(as)
+  {
+    dxbcAS = as->GetDXBC();
+
+    RDCASSERT(dxbcAS);
+  }
+
+  DXBC::DXBCContainer *dxbcMS = NULL;
+
+  WrappedID3D12Shader *ms = origPSO->MS();
+
+  if(as)
+  {
+    dxbcMS = ms->GetDXBC();
+
+    RDCASSERT(dxbcMS);
+  }
   DXBC::DXBCContainer *dxbcDS = NULL;
 
   WrappedID3D12Shader *ds = origPSO->DS();
@@ -1438,6 +1459,9 @@ struct D3D12InitPostVSCallback : public D3D12ActionCallback
   void PreDispatch(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override {}
   bool PostDispatch(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override { return false; }
   void PostRedispatch(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override {}
+  void PreDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override {}
+  bool PostDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override { return false; }
+  void PostRedispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) override {}
   // Ditto copy/etc
   void PreMisc(uint32_t eid, ActionFlags flags, ID3D12GraphicsCommandListX *cmd) {}
   bool PostMisc(uint32_t eid, ActionFlags flags, ID3D12GraphicsCommandListX *cmd) { return false; }

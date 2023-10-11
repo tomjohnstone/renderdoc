@@ -147,7 +147,7 @@ struct NVD3D12Counters::Impl
     if(actionnode.events.empty())
       return false;    // Skip nodes with no events
 
-    if(!(actionnode.flags & (ActionFlags::Clear | ActionFlags::Drawcall | ActionFlags::Dispatch |
+    if(!(actionnode.flags & (ActionFlags::Clear | ActionFlags::Drawcall | ActionFlags::Dispatch | ActionFlags::DispatchMesh |
                              ActionFlags::Present | ActionFlags::Copy | ActionFlags::Resolve)))
       return false;    // Filter out events we cannot profile
 
@@ -262,6 +262,12 @@ struct D3D12NvidiaActionCallback final : public D3D12ActionCallback
     return PostDraw(eid, cmd);
   }
   void PostRedispatch(uint32_t eid, ID3D12GraphicsCommandListX *cmd) final { PostRedraw(eid, cmd); }
+  void PreDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) final { PreDraw(eid, cmd); }
+  bool PostDispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) final
+  {
+    return PostDraw(eid, cmd);
+  }
+  void PostRedispatchMesh(uint32_t eid, ID3D12GraphicsCommandListX *cmd) final { PostRedraw(eid, cmd); }
   void PreMisc(uint32_t eid, ActionFlags flags, ID3D12GraphicsCommandListX *cmd) final
   {
     if(flags & ActionFlags::PassBoundary)
