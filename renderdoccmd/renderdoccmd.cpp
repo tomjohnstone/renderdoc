@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
+#include "common/globalconfig.h"
 #include "renderdoccmd.h"
 #include <app/renderdoc_app.h>
 #include <replay/version.h>
@@ -920,6 +921,7 @@ struct BenchmarkCommand : public ReplayCommand
   }
 };
 
+#if ENABLED(ENABLE_UNIT_TESTS)
 struct TestCommand : public Command
 {
 private:
@@ -992,6 +994,7 @@ public:
     return 1;
   }
 };
+#endif
 
 struct CapAltBitCommand : public Command
 {
@@ -1655,7 +1658,9 @@ int renderdoccmd(GlobalEnvironment &env, std::vector<std::string> &argv)
     add_command("remoteserver", new RemoteServerCommand());
     add_command("replay", new ReplayCommand());
     add_command("capaltbit", new CapAltBitCommand());
+#if ENABLED(ENABLE_UNIT_TESTS)
     add_command("test", new TestCommand());
+#endif
     add_command("convert", new ConvertCommand());
     add_command("embed", new EmbeddedSectionCommand(false));
     add_command("extract", new EmbeddedSectionCommand(true));
