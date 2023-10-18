@@ -382,7 +382,11 @@ manually, but since it is common this helper is provided.
   {
     ResourceId pointerShader;
     memcpy(&pointerShader, &value.u64v[2], sizeof(pointerShader));
-    return {value.u64v[0], pointerShader, uint32_t(value.u64v[1] & 0xFFFFFFFF)};
+    PointerVal pv;
+    pv.pointer = value.u64v[0];
+    pv.shader = pointerShader;
+    pv.pointerTypeID = uint32_t(value.u64v[1] & 0xFFFFFFFF);
+    return pv;
   }
 
   DOCUMENT(R"(Utility function for setting a bindpoint reference.
