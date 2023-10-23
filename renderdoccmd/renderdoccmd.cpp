@@ -30,7 +30,8 @@
 
 #include <fstream>
 #include <string>
-
+#define NOMINMAX
+#include <windows.h>
 
 rdcstr conv(const std::string &s)
 {
@@ -1634,7 +1635,7 @@ static int command_usage(std::string command)
     if(it->second->IsInternalOnly())
       continue;
 
-    max_width = max(max_width, it->first.length());
+    max_width = std::max(max_width, it->first.length());
   }
 
   for(auto it = commands.begin(); it != commands.end(); ++it)
