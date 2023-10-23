@@ -31,6 +31,7 @@
 #include <fstream>
 #include <string>
 
+
 rdcstr conv(const std::string &s)
 {
   return rdcstr(s.c_str(), s.size());
@@ -887,6 +888,7 @@ struct BenchmarkCommand : public ReplayCommand
   {
     ReplayCommand::AddOptions(parser);
 
+    parser.add<std::string>("content-dir", 'c', "Folder to get content from", false);
     parser.set_footer("<benchmark.ubm>");
   }
 
@@ -901,7 +903,11 @@ struct BenchmarkCommand : public ReplayCommand
       return false;
     }
 
-    std::string baseFolder = "Benchmarks/" + rest[0];
+    std::string baseFolder = parser.get<std::string>("content-dir");
+    if(!baseFolder.empty())
+      baseFolder += "/";
+    baseFolder += "Benchmarks/" + rest[0];
+
     filename = baseFolder + "/args.txt";
 
     std::ifstream file(filename);
@@ -914,6 +920,42 @@ struct BenchmarkCommand : public ReplayCommand
 
     auto& captureFilename = args[args.size() - 1];
     captureFilename = baseFolder + "/" + captureFilename;
+
+    {
+      std::ifstream captureFile{captureFilename};
+      if (!captureFile.good())
+      {
+        // additional information
+        STARTUPINFOA si;
+        PROCESS_INFORMATION pi;
+
+        // set the size of the structures
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        ZeroMemory(&pi, sizeof(pi));
+
+        std::string args = "7za.exe -o" + baseFolder + " x " + baseFolder + "/capture.7z.001";
+
+        // start the program up
+        CreateProcessA(NULL,    // the path
+                      (char*)args.c_str(),         // Command line
+                      NULL,                 // Process handle not inheritable
+                      NULL,                 // Thread handle not inheritable
+                      FALSE,                // Set handle inheritance to FALSE
+                      0,                    // No creation flags
+                      NULL,                 // Use parent's environment block
+                      NULL,                 // Use parent's starting directory
+                      &si,                  // Pointer to STARTUPINFO structure
+                      &pi    // Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
+        );
+
+        WaitForSingleObject(pi.hProcess, INFINITE);
+
+        // Close process and thread handles.
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+      }
+    }
 
     parser.parse(args, true);
 
@@ -1592,7 +1634,7 @@ static int command_usage(std::string command)
     if(it->second->IsInternalOnly())
       continue;
 
-    max_width = std::max(max_width, it->first.length());
+    max_width = max(max_width, it->first.length());
   }
 
   for(auto it = commands.begin(); it != commands.end(); ++it)
