@@ -124,7 +124,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;WIN64;RENDERDOC_PLATFORM_WIN32;NDEBUG;_CONSOLE;PYTHON_VERSION_MINOR=6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)renderdocshim\;$(SolutionDir)renderdoc\api\;$(SolutionDir)renderdoc\api\replay;$(SolutionDir)renderdoccmd\3rdparty\;$(SolutionDir)renderdoc\3rdparty\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)renderdoc\;$(SolutionDir)renderdocshim\;$(SolutionDir)renderdoc\api\;$(SolutionDir)renderdoc\api\replay;$(SolutionDir)renderdoccmd\3rdparty\;$(SolutionDir)renderdoc\3rdparty\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
