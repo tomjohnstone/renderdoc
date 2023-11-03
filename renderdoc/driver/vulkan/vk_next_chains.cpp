@@ -260,6 +260,10 @@ static void AppendModifiedChainedStruct(byte *&tempMem, VkStruct *outputStruct,
               VkPhysicalDeviceExtendedDynamicStateFeaturesEXT);                                      \
   COPY_STRUCT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT,               \
               VkPhysicalDeviceExtendedDynamicState2FeaturesEXT);                                     \
+  COPY_STRUCT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT,               \
+              VkPhysicalDeviceExtendedDynamicState3FeaturesEXT);                                     \
+  COPY_STRUCT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_PROPERTIES_EXT,             \
+              VkPhysicalDeviceExtendedDynamicState3PropertiesEXT);                                   \
   COPY_STRUCT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO,                                \
               VkPhysicalDeviceExternalBufferInfo);                                                   \
   COPY_STRUCT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO,                          \
@@ -910,8 +914,6 @@ static void AppendModifiedChainedStruct(byte *&tempMem, VkStruct *outputStruct,
   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRM_PROPERTIES_EXT:                                \
   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_UNUSED_ATTACHMENTS_FEATURES_EXT: \
   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXCLUSIVE_SCISSOR_FEATURES_NV:                     \
-  case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT:             \
-  case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_PROPERTIES_EXT:           \
   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT:               \
   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_RDMA_FEATURES_NV:                  \
   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT:                                \
@@ -1605,11 +1607,36 @@ size_t GetNextPatchSize(const void *pNext)
   return memSize;
 }
 
+void PreprocessNextChain(const VkBaseInStructure *nextInput, NextChainFlags &nextChainFlags)
+{
+  while(nextInput)
+  {
+    switch(nextInput->sType)
+    {
+      case VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_LIBRARY_CREATE_INFO_EXT:
+      {
+        const VkGraphicsPipelineLibraryCreateInfoEXT *libCreateInfo =
+            (const VkGraphicsPipelineLibraryCreateInfoEXT *)nextInput;
+        nextChainFlags.dynRenderingFormatsValid =
+            (libCreateInfo->flags &
+             VK_GRAPHICS_PIPELINE_LIBRARY_FRAGMENT_OUTPUT_INTERFACE_BIT_EXT) != 0;
+        break;
+      }
+      default: break;
+    }
+
+    nextInput = nextInput->pNext;
+  }
+}
+
 void UnwrapNextChain(CaptureState state, const char *structName, byte *&tempMem,
                      VkBaseInStructure *infoStruct)
 {
   if(!infoStruct)
     return;
+
+  NextChainFlags nextChainFlags;
+  PreprocessNextChain(infoStruct, nextChainFlags);
 
   // during capture, this walks the pNext chain and either copies structs that can be passed
   // straight through, or copies and modifies any with vulkan objects that need to be unwrapped.
@@ -2285,8 +2312,11 @@ void UnwrapNextChain(CaptureState state, const char *structName, byte *&tempMem,
         *out = *in;
 
         out->pColorAttachmentFormats = outFormats;
-        for(uint32_t i = 0; i < in->colorAttachmentCount; i++)
-          outFormats[i] = in->pColorAttachmentFormats[i];
+        if(nextChainFlags.dynRenderingFormatsValid)
+        {
+          for(uint32_t i = 0; i < in->colorAttachmentCount; i++)
+            outFormats[i] = in->pColorAttachmentFormats[i];
+        }
 
         break;
       }

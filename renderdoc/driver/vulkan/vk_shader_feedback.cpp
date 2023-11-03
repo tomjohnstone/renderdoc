@@ -975,13 +975,7 @@ void AnnotateShader(const ShaderReflection &refl, const SPIRVPatchData &patchDat
       ++it;
 
     if(funcId == entryID)
-    {
-      for(const rdcspv::Operation &op : locationGather)
-      {
-        editor.AddOperation(it, op);
-        ++it;
-      }
-    }
+      editor.AddOperations(it, locationGather);
 
     // now patch accesses in the function body
     for(; it; ++it)
@@ -1579,6 +1573,9 @@ bool VulkanReplay::FetchShaderFeedback(uint32_t eventId)
     if(pipeLayouts[i] == ResourceId())
       continue;
 
+    const rdcarray<VulkanStatePipeline::DescriptorAndOffsets> &descSets =
+        (result.compute ? state.compute.descSets : state.graphics.descSets);
+
     rdcspv::Binding key;
 
     for(size_t set = 0; set < pipeInfo.descSetLayouts.size(); set++)
@@ -1599,11 +1596,26 @@ bool VulkanReplay::FetchShaderFeedback(uint32_t eventId)
         if(bindData.descriptorCount > 1 &&
            bindData.layoutDescType != VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK)
         {
+          uint32_t descriptorCount = bindData.descriptorCount;
+          if(bindData.variableSize)
+          {
+            if(set < descSets.size())
+            {
+              ResourceId descSet = descSets[set].descSet;
+              if(descSet != ResourceId())
+              {
+                auto it = m_pDriver->m_DescriptorSetState.find(descSet);
+                if(it != m_pDriver->m_DescriptorSetState.end())
+                  descriptorCount = it->second.data.variableDescriptorCount;
+              }
+            }
+          }
+
           key.binding = (uint32_t)binding;
 
-          offsetMap[key] = {feedbackStorageSize, bindData.descriptorCount};
+          offsetMap[key] = {feedbackStorageSize, descriptorCount};
 
-          feedbackStorageSize += bindData.descriptorCount * sizeof(uint32_t);
+          feedbackStorageSize += descriptorCount * sizeof(uint32_t);
         }
       }
     }

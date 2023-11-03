@@ -622,6 +622,9 @@ public:
 
     return true;
   }
+
+  virtual ReplayOptions GetReplayOptions() { return ReplayOptions(); }
+
   virtual int Execute(const CaptureOptions &)
   {
     if(!remote_host.empty())
@@ -677,7 +680,7 @@ public:
 
       IReplayController *renderer = NULL;
       ResultDetails result = {};
-      rdctie(result, renderer) = file->OpenCapture(ReplayOptions(), NULL);
+      rdctie(result, renderer) = file->OpenCapture(GetReplayOptions(), NULL);
 
       file->Shutdown();
 
@@ -891,6 +894,14 @@ struct BenchmarkCommand : public ReplayCommand
 
     parser.add<std::string>("content-dir", 'c', "Folder to get content from", false);
     parser.set_footer("<benchmark.ubm>");
+  }
+
+  virtual ReplayOptions GetReplayOptions() override
+  {
+    auto options = ReplayCommand::GetReplayOptions();
+    options.optimisation = ReplayOptimisationLevel::Fastest;
+    options.apiValidation = false;
+    return options;
   }
 
   virtual bool Parse(cmdline::parser &parser, GlobalEnvironment &env) override

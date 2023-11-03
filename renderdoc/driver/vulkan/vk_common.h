@@ -337,7 +337,17 @@ enum VkFlagWithNoBits
   FlagWithNoBits_Dummy_Bit = 1,
 };
 
+// global per-chain flags to use in a double-pass processing
+struct NextChainFlags
+{
+  // VkPipelineRenderingCreateInfoKHR provides a list of formats which is normally valid except if
+  // we're creating a pipeline library without the fragment output interface. We need to detect that
+  // first before processing it
+  bool dynRenderingFormatsValid = true;
+};
+
 size_t GetNextPatchSize(const void *next);
+void PreprocessNextChain(const VkBaseInStructure *nextInput, NextChainFlags &nextChainFlags);
 void UnwrapNextChain(CaptureState state, const char *structName, byte *&tempMem,
                      VkBaseInStructure *infoStruct);
 void CopyNextChainForPatching(const char *structName, byte *&tempMem, VkBaseInStructure *infoStruct);
@@ -945,6 +955,26 @@ enum class VulkanChunk : uint32_t
   vkCmdSetFragmentShadingRateKHR,
   vkSetDeviceMemoryPriorityEXT,
   vkCmdSetAttachmentFeedbackLoopEnableEXT,
+  vkCmdSetAlphaToCoverageEnableEXT,
+  vkCmdSetAlphaToOneEnableEXT,
+  vkCmdSetColorBlendEnableEXT,
+  vkCmdSetColorBlendEquationEXT,
+  vkCmdSetColorWriteMaskEXT,
+  vkCmdSetConservativeRasterizationModeEXT,
+  vkCmdSetDepthClampEnableEXT,
+  vkCmdSetDepthClipEnableEXT,
+  vkCmdSetDepthClipNegativeOneToOneEXT,
+  vkCmdSetExtraPrimitiveOverestimationSizeEXT,
+  vkCmdSetLineRasterizationModeEXT,
+  vkCmdSetLineStippleEnableEXT,
+  vkCmdSetLogicOpEnableEXT,
+  vkCmdSetPolygonModeEXT,
+  vkCmdSetProvokingVertexModeEXT,
+  vkCmdSetRasterizationSamplesEXT,
+  vkCmdSetRasterizationStreamEXT,
+  vkCmdSetSampleLocationsEnableEXT,
+  vkCmdSetSampleMaskEXT,
+  vkCmdSetTessellationDomainOriginEXT,
   Max,
 };
 
@@ -1174,6 +1204,8 @@ DECLARE_REFLECTION_STRUCT(VkPhysicalDeviceDiscardRectanglePropertiesEXT);
 DECLARE_REFLECTION_STRUCT(VkPhysicalDeviceDriverProperties);
 DECLARE_REFLECTION_STRUCT(VkPhysicalDeviceDynamicRenderingFeatures);
 DECLARE_REFLECTION_STRUCT(VkPhysicalDeviceExtendedDynamicState2FeaturesEXT);
+DECLARE_REFLECTION_STRUCT(VkPhysicalDeviceExtendedDynamicState3FeaturesEXT);
+DECLARE_REFLECTION_STRUCT(VkPhysicalDeviceExtendedDynamicState3PropertiesEXT);
 DECLARE_REFLECTION_STRUCT(VkPhysicalDeviceExtendedDynamicStateFeaturesEXT);
 DECLARE_REFLECTION_STRUCT(VkPhysicalDeviceExternalBufferInfo);
 DECLARE_REFLECTION_STRUCT(VkPhysicalDeviceExternalFenceInfo);
@@ -1582,6 +1614,8 @@ DECLARE_DESERIALISE_TYPE(VkPhysicalDeviceDiscardRectanglePropertiesEXT);
 DECLARE_DESERIALISE_TYPE(VkPhysicalDeviceDriverProperties);
 DECLARE_DESERIALISE_TYPE(VkPhysicalDeviceDynamicRenderingFeatures);
 DECLARE_DESERIALISE_TYPE(VkPhysicalDeviceExtendedDynamicState2FeaturesEXT);
+DECLARE_DESERIALISE_TYPE(VkPhysicalDeviceExtendedDynamicState3FeaturesEXT);
+DECLARE_DESERIALISE_TYPE(VkPhysicalDeviceExtendedDynamicState3PropertiesEXT);
 DECLARE_DESERIALISE_TYPE(VkPhysicalDeviceExtendedDynamicStateFeaturesEXT);
 DECLARE_DESERIALISE_TYPE(VkPhysicalDeviceExternalBufferInfo);
 DECLARE_DESERIALISE_TYPE(VkPhysicalDeviceExternalFenceInfo);
@@ -1822,6 +1856,7 @@ DECLARE_REFLECTION_STRUCT(VkClearColorValue);
 DECLARE_REFLECTION_STRUCT(VkClearDepthStencilValue);
 DECLARE_REFLECTION_STRUCT(VkClearRect);
 DECLARE_REFLECTION_STRUCT(VkClearValue);
+DECLARE_REFLECTION_STRUCT(VkColorBlendEquationEXT);
 DECLARE_REFLECTION_STRUCT(VkComponentMapping);
 DECLARE_REFLECTION_STRUCT(VkConformanceVersion);
 DECLARE_REFLECTION_STRUCT(VkDescriptorBufferInfo);

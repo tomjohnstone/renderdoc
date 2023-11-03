@@ -76,6 +76,7 @@ public:
   Id MakeId();
 
   Id AddOperation(Iter iter, const Operation &op);
+  Iter AddOperations(Iter iter, const OperationList &ops);
 
   // callbacks to allow us to update our internal structures over changes
 
@@ -174,14 +175,23 @@ public:
     return it->second;
   }
 
+  rdcpair<Id, Id> AddBuiltinInputLoad(OperationList &ops, ShaderStage stage, BuiltIn builtin,
+                                      Id type);
+
   Id DeclareStructType(const rdcarray<Id> &members);
 
   // helper for AddConstant
   template <typename T>
   Id AddConstantImmediate(T t)
   {
+    return AddConstantImmediate<T>(t, MakeId());
+  }
+
+  template <typename T>
+  Id AddConstantImmediate(T t, rdcspv::Id constantId)
+  {
     Id typeId = DeclareType(scalar<T>());
-    rdcarray<uint32_t> words = {typeId.value(), MakeId().value()};
+    rdcarray<uint32_t> words = {typeId.value(), constantId.value()};
 
     words.resize(words.size() + (sizeof(T) + 3) / 4);
 
@@ -246,6 +256,19 @@ private:
 
   virtual void RegisterOp(Iter iter);
   virtual void UnregisterOp(Iter iter);
+  virtual void PostParse();
+
+  void RegisterBuiltinMembers(rdcspv::Id baseId, const rdcarray<uint32_t> chainSoFar,
+                              const DataType *type);
+
+  struct BuiltinInputData
+  {
+    Id variable;
+    Id type;
+    rdcarray<uint32_t> chain;
+  };
+
+  std::map<BuiltIn, BuiltinInputData> builtinInputs;
 
   std::map<Id, Binding> bindings;
 
